@@ -9,7 +9,6 @@ gemini_api_key = os.getenv("GEMINI_API_KEY")
 
 print("en gemini.py: " + gemini_api_key)
 
-gemini_api_key= 'AIzaSyDTnyLyGSJ0O5sCyyK_GdpxBf0r5srZ9G8'
 
 print(gemini_api_key)
 
