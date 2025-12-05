@@ -7,6 +7,12 @@ load_dotenv()  # Carga el .env que tienes en la carpeta
 
 gemini_api_key = os.getenv("GEMINI_API_KEY")
 
+print("en gemini.py: " + gemini_api_key)
+
+gemini_api_key= 'AIzaSyDTnyLyGSJ0O5sCyyK_GdpxBf0r5srZ9G8'
+
+print(gemini_api_key)
+
 gemini_llm = LLM(
     model="gemini-2.0-flash",
     api_key=gemini_api_key,

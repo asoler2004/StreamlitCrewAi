@@ -20,6 +20,8 @@ def test_environment():
         'SUPABASE_KEY',
         'SUPABASE_SECRET_KEY'
     ]
+
+    print(os.getenv('GEMINI_API_KEY'))
     
     missing = []
     for var in required_vars:
@@ -59,7 +61,7 @@ def test_imports():
     
     if failed:
         print(f"\n❌ Dependencias faltantes: {', '.join(failed)}")
-        print("💡 Ejecuta: uv sync o pip install -e .")
+        print("💡 Ejecuta: uv sync o uv pip install -e .")
         return False
     
     return True

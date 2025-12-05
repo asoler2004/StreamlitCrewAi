@@ -85,14 +85,14 @@ El script creará:
 uv sync
 ```
 
-### Opción 2: Con pip
+### Opción 2: Instalación en modo desarrollo
 ```bash
-pip install -r requirements.txt
+uv pip install -e .
 ```
 
-### Opción 3: Instalación editable
+### Opción 3: Solo instalar dependencias
 ```bash
-pip install -e .
+uv pip install streamlit crewai python-dotenv supabase transformers torch torchvision Pillow reportlab markdown agentops
 ```
 
 ## ✅ Verificación del Sistema
@@ -135,7 +135,7 @@ run.bat
 ```bash
 uv sync
 # o
-pip install -r requirements.txt
+uv pip install -e .
 ```
 
 ### Error: "Invalid API Key"

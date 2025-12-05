@@ -38,19 +38,22 @@ Una aplicación completa desarrollada con CrewAI y Streamlit para crear contenid
 
 ### Pasos de Instalación
 
+> 📖 **Para una guía detallada de instalación con uv, consulta [INSTALACION_UV.md](INSTALACION_UV.md)**
+
 1. **Clonar el repositorio**
 ```bash
 git clone <tu-repositorio>
 cd streamlitcrewai
 ```
 
-2. **Instalar dependencias**
+2. **Instalar dependencias con uv (recomendado)**
 ```bash
-# Con uv (recomendado)
 uv sync
+```
 
-# O con pip
-pip install -e .
+3. **Ejecutar la aplicación**
+```bash
+uv run streamlit run main.py
 ```
 
 3. **Configurar variables de entorno**
@@ -77,6 +80,12 @@ Ejecuta el script SQL en `setup_database.sql` en tu panel de Supabase.
 
 ### Ejecutar la aplicación
 ```bash
+# Con uv (recomendado)
+uv run streamlit run main.py
+
+# O activando el entorno virtual
+source .venv/bin/activate  # Linux/macOS
+# .venv\Scripts\activate   # Windows
 streamlit run main.py
 ```
 

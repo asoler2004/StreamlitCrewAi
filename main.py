@@ -6,6 +6,7 @@ from utils.config import check_environment_variables
 
 # Cargar variables de entorno
 load_dotenv()
+print("en main.py = " + os.getenv('GEMINI_API_KEY'))
 
 def main():
     st.set_page_config(

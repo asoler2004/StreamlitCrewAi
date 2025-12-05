@@ -12,8 +12,8 @@ class SupabaseManager:
         self.client: Client = create_client(self.url, self.secret_key)
     
     def save_story(self, user_id: str, title: str, content: Dict, tone: str, 
-                   images: List[str] = None, metadata: Dict = None) -> Dict:
-        """Guarda una historia en la base de datos"""
+                   images: List[str] = None, metadata: Dict = None, story_id: str = None) -> Dict:
+        """Guarda una historia en la base de datos o actualiza una existente"""
         try:
             story_data = {
                 "user_id": user_id,
@@ -25,8 +25,49 @@ class SupabaseManager:
                 "status": "published"
             }
             
-            result = self.client.table("stories").insert(story_data).execute()
+            if story_id:
+                # Actualizar historia existente
+                # Primero, crear backup de la versión anterior
+                self.create_story_version(story_id)
+                
+                # Incrementar versión
+                current_story = self.client.table("stories").select("version").eq("id", story_id).execute()
+                if current_story.data:
+                    current_version = current_story.data[0].get("version", 1)
+                    story_data["version"] = current_version + 1
+                
+                result = self.client.table("stories").update(story_data).eq("id", story_id).execute()
+            else:
+                # Crear nueva historia
+                story_data["version"] = 1
+                result = self.client.table("stories").insert(story_data).execute()
+            
             return {"success": True, "data": result.data[0]}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+    
+    def create_story_version(self, story_id: str) -> Dict:
+        """Crea una versión backup de una historia antes de actualizarla"""
+        try:
+            # Obtener la historia actual
+            current_story = self.client.table("stories").select("*").eq("id", story_id).execute()
+            
+            if not current_story.data:
+                return {"success": False, "error": "Historia no encontrada"}
+            
+            story = current_story.data[0]
+            
+            # Crear entrada en story_versions
+            version_data = {
+                "story_id": story_id,
+                "content": story["content"],
+                "version_number": story.get("version", 1),
+                "version_notes": f"Backup automático antes de actualización"
+            }
+            
+            result = self.client.table("story_versions").insert(version_data).execute()
+            return {"success": True, "data": result.data[0]}
+            
         except Exception as e:
             return {"success": False, "error": str(e)}
     
@@ -66,11 +107,20 @@ class SupabaseManager:
             with open(file_path, 'rb') as f:
                 file_data = f.read()
             
-            storage_path = f"{user_id}/{file_name}"
+            # Generar nombre único para evitar conflictos
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            storage_path = f"{user_id}/{timestamp}_{file_name}"
             
-            result = self.client.storage.from_("story-images").upload(
-                storage_path, file_data
-            )
+            # Intentar subir la imagen
+            try:
+                result = self.client.storage.from_("story-images").upload(
+                    storage_path, file_data
+                )
+            except Exception as upload_error:
+                # Si falla, intentar con upsert (sobrescribir)
+                result = self.client.storage.from_("story-images").upload(
+                    storage_path, file_data, {"upsert": "true"}
+                )
             
             # Obtener URL pública
             public_url = self.client.storage.from_("story-images").get_public_url(storage_path)
@@ -78,6 +128,14 @@ class SupabaseManager:
             return {"success": True, "url": public_url}
         except Exception as e:
             return {"success": False, "error": str(e)}
+    
+    def get_image_url(self, image_path: str) -> str:
+        """Obtiene la URL pública de una imagen en Supabase Storage"""
+        try:
+            public_url = self.client.storage.from_("story-images").get_public_url(image_path)
+            return public_url
+        except Exception as e:
+            return ""
     
     def delete_story(self, story_id: str, user_id: str) -> Dict:
         """Elimina una historia"""

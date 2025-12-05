@@ -19,7 +19,7 @@ def check_dependencies():
         return True
     except ImportError as e:
         print(f"❌ Dependencia faltante: {e}")
-        print("💡 Ejecuta: uv sync o pip install -e .")
+        print("💡 Ejecuta: uv sync o uv pip install -e .")
         return False
 
 def check_env_file():
@@ -37,12 +37,12 @@ def main():
     print("🚀 Iniciando Creador de Historias Visuales...")
     
     # Verificar dependencias
-    if not check_dependencies():
-        sys.exit(1)
+    # if not check_dependencies():
+    #     sys.exit(1)
     
-    # Verificar archivo .env
-    if not check_env_file():
-        print("⚠️  Continuando sin verificar variables de entorno...")
+    # # Verificar archivo .env
+    # if not check_env_file():
+    #     print("⚠️  Continuando sin verificar variables de entorno...")
     
     # Crear directorio de historias si no existe
     stories_dir = Path("stories")

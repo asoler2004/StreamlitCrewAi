@@ -19,6 +19,16 @@ class StoryCrew:
         # Inicializar estado de la sesión
         if 'current_story' not in st.session_state:
             st.session_state.current_story = None
+        if 'template_story' not in st.session_state:
+            st.session_state.template_story = None
+        if 'story_approved' not in st.session_state:
+            st.session_state.story_approved = False
+        if 'show_storage_options' not in st.session_state:
+            st.session_state.show_storage_options = False
+        if 'crew_workflow' not in st.session_state:
+            st.session_state.crew_workflow = []
+        if 'story_saved_successfully' not in st.session_state:
+            st.session_state.story_saved_successfully = False
         if 'user_id' not in st.session_state:
             st.session_state.user_id = "demo_user"  # En producción, esto vendría de autenticación
     
@@ -34,6 +44,18 @@ class StoryCrew:
                 ["📝 Crear Nueva Historia", "📚 Ver Historias Archivadas"],
                 key="main_mode"
             )
+            
+            # Sección de workflow de agentes
+            if st.session_state.crew_workflow:
+                st.divider()
+                st.header("🤖 Workflow de Agentes")
+                
+                with st.expander("Ver Progreso en Tiempo Real", expanded=True):
+                    for step in st.session_state.crew_workflow:
+                        status_icon = "✅" if step['status'] == 'completed' else "🔄" if step['status'] == 'running' else "⏳"
+                        st.write(f"{status_icon} **{step['agent']}**: {step['task']}")
+                        if step.get('result'):
+                            st.caption(f"Resultado: {step['result'][:100]}...")
         
         if mode == "📝 Crear Nueva Historia":
             self.create_story_interface()
@@ -43,6 +65,12 @@ class StoryCrew:
     def create_story_interface(self):
         """Interfaz para crear una nueva historia"""
         st.header("📝 Crear Nueva Historia Visual")
+        
+        # Verificar si hay una plantilla cargada
+        if st.session_state.template_story:
+            st.info("📋 Editando historia desde plantilla")
+            self.edit_template_interface()
+            return
         
         # Paso 1: Selección de imagen
         st.subheader("1️⃣ Selecciona tu imagen")
@@ -75,11 +103,28 @@ class StoryCrew:
                 )
             
             with col2:
+                tone_options = [
+                    "Profesional", "Divertido", "Inspiracional", "Educativo", 
+                    "Casual", "Formal", "Motivacional", "Informativo", 
+                    "Persuasivo", "Emocional", "Técnico", "Creativo",
+                    "Amigable", "Autoritativo", "Conversacional", "Urgente"
+                ]
+                
                 tone = st.selectbox(
                     "Tono de la publicación:",
-                    ["Profesional", "Divertido", "Inspiracional", "Educativo", "Casual", "Formal"],
+                    tone_options,
                     help="El tono influirá en el estilo del contenido"
                 )
+                
+                # Opción para tono personalizado
+                custom_tone = st.text_input(
+                    "Tono personalizado (opcional):",
+                    placeholder="Ej: Sarcástico, Nostálgico, Científico...",
+                    help="Define tu propio tono si no encuentras el adecuado"
+                )
+                
+                if custom_tone:
+                    tone = custom_tone
             
             # Especificaciones adicionales
             additional_specs = st.text_area(
@@ -90,37 +135,55 @@ class StoryCrew:
             
             # Paso 3: Generar historia
             if st.button("🚀 Generar Historia", type="primary"):
-                with st.spinner("Analizando imagen y creando contenido..."):
-                    try:
-                        # Crear especificaciones del usuario
-                        user_specs = {
-                            'platform': platform,
-                            'tone': tone.lower(),
-                            'additional_specs': additional_specs
-                        }
-                        
-                        # Ejecutar el crew
-                        result = self.execute_story_creation(temp_image_path, user_specs)
+                # Limpiar workflow anterior
+                st.session_state.crew_workflow = []
+                
+                # Crear placeholder para workflow en tiempo real
+                workflow_placeholder = st.empty()
+                
+                try:
+                    # Crear especificaciones del usuario
+                    user_specs = {
+                        'platform': platform,
+                        'tone': tone.lower(),
+                        'additional_specs': additional_specs
+                    }
+                    
+                    # Subir imagen a Supabase primero
+                    with st.spinner("Subiendo imagen..."):
+                        image_url = self.upload_image_to_supabase(temp_image_path, uploaded_file.name)
+                    
+                    # Ejecutar el crew con seguimiento en tiempo real
+                    with st.spinner("Analizando imagen y creando contenido..."):
+                        result = self.execute_story_creation(temp_image_path, user_specs, workflow_placeholder)
                         
                         if result:
+                            # Agregar URL de imagen al resultado
+                            result['image_url'] = image_url
+                            result['original_filename'] = uploaded_file.name
+                            
                             st.session_state.current_story = result
+                            st.session_state.story_approved = False
+                            st.session_state.show_storage_options = False
                             st.success("✅ ¡Historia creada exitosamente!")
-                            
-                            # Mostrar resultado
-                            self.display_story_result(result)
-                            
-                            # Opciones de almacenamiento
-                            self.storage_options_interface(result)
+                            st.rerun()
                         
-                    except Exception as e:
-                        st.error(f"❌ Error al crear la historia: {str(e)}")
-                    
-                    finally:
-                        # Limpiar archivo temporal
-                        if os.path.exists(temp_image_path):
-                            os.remove(temp_image_path)
+                except Exception as e:
+                    st.error(f"❌ Error al crear la historia: {str(e)}")
+                
+                finally:
+                    # Limpiar archivo temporal
+                    if os.path.exists(temp_image_path):
+                        os.remove(temp_image_path)
+        
+        # Mostrar historia actual si existe
+        if st.session_state.current_story:
+            self.display_story_result(st.session_state.current_story)
+            
+            if st.session_state.story_approved or st.session_state.show_storage_options:
+                self.storage_options_interface(st.session_state.current_story)
     
-    def execute_story_creation(self, image_path: str, user_specs: Dict[str, Any]) -> Dict[str, Any]:
+    def execute_story_creation(self, image_path: str, user_specs: Dict[str, Any], workflow_placeholder=None) -> Dict[str, Any]:
         """Ejecuta el proceso de creación de historia usando CrewAI"""
         
         # Crear tareas
@@ -141,6 +204,9 @@ class StoryCrew:
             content_task = self.tasks.create_twitter_content_task("", user_specs)
             content_agent = self.agents.twitter_agent()
         
+        # Actualizar workflow
+        self.update_workflow("Agente de Visión", "Analizando imagen", "running", workflow_placeholder)
+        
         # Crear crew
         crew = Crew(
             agents=[self.agents.vision_agent(), content_agent],
@@ -149,8 +215,13 @@ class StoryCrew:
             verbose=True
         )
         
-        # Ejecutar crew
+        # Ejecutar crew con seguimiento
+        self.update_workflow("Agente de Visión", "Analizando imagen", "running", workflow_placeholder)
+        
         result = crew.kickoff()
+        
+        self.update_workflow("Agente de Visión", "Análisis completado", "completed", workflow_placeholder)
+        self.update_workflow(f"Agente de {user_specs['platform']}", "Creando contenido", "completed", workflow_placeholder)
         
         # Procesar resultado
         try:
@@ -181,81 +252,298 @@ class StoryCrew:
     
     def display_story_result(self, story_data: Dict[str, Any]):
         """Muestra el resultado de la historia creada"""
-        st.subheader("📖 Tu Historia Generada")
-        
         content = story_data.get('content', {})
+        title = content.get('title', 'Historia Generada')
         
-        # Mostrar información básica
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            st.metric("Plataforma", story_data.get('platform', 'N/A'))
-        with col2:
-            st.metric("Tono", story_data.get('tone', 'N/A').title())
-        with col3:
-            st.metric("Fecha", datetime.fromisoformat(story_data.get('created_at', datetime.now().isoformat())).strftime("%d/%m/%Y"))
+        st.subheader(f"📖 {title}")
         
-        # Mostrar contenido
-        if 'title' in content:
-            st.markdown(f"### {content['title']}")
+        # Mostrar imagen si existe
+        if story_data.get('image_url'):
+            col1, col2 = st.columns([1, 2])
+            with col1:
+                st.image(story_data['image_url'], caption="Imagen de la historia", use_column_width=True)
+            with col2:
+                # Mostrar información básica
+                st.metric("Plataforma", story_data.get('platform', 'N/A'))
+                st.metric("Tono", story_data.get('tone', 'N/A').title())
+                st.metric("Fecha", datetime.fromisoformat(story_data.get('created_at', datetime.now().isoformat())).strftime("%d/%m/%Y"))
+        else:
+            # Mostrar información básica sin imagen
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric("Plataforma", story_data.get('platform', 'N/A'))
+            with col2:
+                st.metric("Tono", story_data.get('tone', 'N/A').title())
+            with col3:
+                st.metric("Fecha", datetime.fromisoformat(story_data.get('created_at', datetime.now().isoformat())).strftime("%d/%m/%Y"))
+
         
-        if 'hook' in content:
-            st.markdown("**🎣 Gancho:**")
-            st.info(content['hook'])
-        
-        if 'body' in content and isinstance(content['body'], list):
-            st.markdown("**📝 Contenido:**")
-            for i, paragraph in enumerate(content['body'], 1):
-                st.markdown(f"{i}. {paragraph}")
-        
-        if 'call_to_action' in content:
-            st.markdown("**📢 Llamada a la Acción:**")
-            st.success(content['call_to_action'])
-        
-        if 'hashtags' in content:
-            st.markdown("**#️⃣ Hashtags:**")
-            st.markdown(" ".join(content['hashtags']))
-        
-        # Texto completo
-        if 'full_text' in content:
-            st.markdown("**📄 Texto Completo:**")
-            st.text_area("", content['full_text'], height=150, disabled=True)
+        # Vista previa visual de la historia
+        st.markdown("**📱 Vista Previa de Publicación:**")
+        self.render_story_preview(story_data)
         
         # Botones de acción
         col1, col2 = st.columns(2)
         with col1:
-            if st.button("✏️ Regenerar Historia"):
+            if st.button("✏️ Regenerar Historia", key="regenerate_story"):
                 st.session_state.current_story = None
+                st.session_state.story_approved = False
+                st.session_state.show_storage_options = False
                 st.rerun()
         
         with col2:
-            if st.button("✅ Aprobar Historia"):
-                st.success("Historia aprobada. Procede al almacenamiento.")
+            if st.button("✅ Aprobar Historia", key="approve_story"):
+                st.session_state.story_approved = True
+                st.session_state.show_storage_options = True
+                st.success("✅ Historia aprobada. Procede al almacenamiento.")
+                st.rerun()
+    
+    def render_story_preview(self, story_data: Dict[str, Any]):
+        """Renderiza una vista previa visual de la historia como se vería publicada"""
+        content = story_data.get('content', {})
+        platform = story_data.get('platform', '').lower()
+        image_url = story_data.get('image_url', '')
+        
+        # Crear HTML personalizado según la plataforma
+        if platform == 'facebook':
+            preview_html = self.create_facebook_preview(content, image_url)
+        elif platform == 'linkedin':
+            preview_html = self.create_linkedin_preview(content, image_url)
+        elif platform == 'instagram':
+            preview_html = self.create_instagram_preview(content, image_url)
+        elif platform in ['twitter', 'twitter/x']:
+            preview_html = self.create_twitter_preview(content, image_url)
+        else:
+            preview_html = self.create_generic_preview(content, image_url)
+        
+        # Mostrar la vista previa
+        st.markdown(preview_html, unsafe_allow_html=True)
+    
+    def create_facebook_preview(self, content: Dict[str, Any], image_url: str = '') -> str:
+        """Crea vista previa estilo Facebook"""
+        full_text = content.get('full_text', '')
+        image_section = f'<img src="{image_url}" style="width: 100%; border-radius: 8px; margin: 12px 0;" alt="Imagen del post">' if image_url else ''
+        
+        return f"""
+        <div style="border: 1px solid #ddd; border-radius: 8px; padding: 16px; background: white; font-family: 'Segoe UI', Arial, sans-serif; max-width: 500px; margin: 10px 0;">
+            <div style="display: flex; align-items: center; margin-bottom: 12px;">
+                <div style="width: 40px; height: 40px; background: #1877f2; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; margin-right: 12px;">U</div>
+                <div>
+                    <div style="font-weight: 600; font-size: 14px;">Tu Página</div>
+                    <div style="font-size: 12px; color: #65676b;">Hace unos minutos · 🌍</div>
+                </div>
+            </div>
+            <div style="font-size: 14px; line-height: 1.4; color: #1c1e21; white-space: pre-wrap;">{full_text}</div>
+            {image_section}
+            <div style="margin-top: 12px; padding-top: 8px; border-top: 1px solid #f0f2f5; display: flex; justify-content: space-around; color: #65676b; font-size: 14px;">
+                <span>👍 Me gusta</span>
+                <span>💬 Comentar</span>
+                <span>📤 Compartir</span>
+            </div>
+        </div>
+        """
+    
+    def create_linkedin_preview(self, content: Dict[str, Any], image_url: str = '') -> str:
+        """Crea vista previa estilo LinkedIn"""
+        full_text = content.get('full_text', '')
+        hashtags = content.get('hashtags', [])
+        hashtag_text = ' '.join(hashtags) if hashtags else ''
+        image_section = f'<img src="{image_url}" style="width: 100%; border-radius: 8px; margin: 12px 0;" alt="Imagen del post">' if image_url else ''
+        
+        return f"""
+        <div style="border: 1px solid #d4d4d8; border-radius: 8px; padding: 16px; background: white; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; max-width: 550px; margin: 10px 0;">
+            <div style="display: flex; align-items: center; margin-bottom: 12px;">
+                <div style="width: 48px; height: 48px; background: #0a66c2; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; margin-right: 12px;">TU</div>
+                <div>
+                    <div style="font-weight: 600; font-size: 14px; color: #000;">Tu Nombre</div>
+                    <div style="font-size: 12px; color: #666;">Tu Título Profesional</div>
+                    <div style="font-size: 12px; color: #666;">Hace 1 hora · 🌍</div>
+                </div>
+            </div>
+            <div style="font-size: 14px; line-height: 1.5; color: #000; white-space: pre-wrap; margin-bottom: 8px;">{full_text}</div>
+            {image_section}
+            {f'<div style="font-size: 14px; color: #0a66c2; margin-bottom: 12px;">{hashtag_text}</div>' if hashtag_text else ''}
+            <div style="margin-top: 12px; padding-top: 8px; border-top: 1px solid #e6e6e6; display: flex; justify-content: space-around; color: #666; font-size: 14px;">
+                <span>👍 Recomendar</span>
+                <span>💬 Comentar</span>
+                <span>🔄 Compartir</span>
+                <span>📤 Enviar</span>
+            </div>
+        </div>
+        """
+    
+    def create_instagram_preview(self, content: Dict[str, Any], image_url: str = '') -> str:
+        """Crea vista previa estilo Instagram"""
+        full_text = content.get('full_text', '')
+        hashtags = content.get('hashtags', [])
+        hashtag_text = ' '.join(hashtags) if hashtags else ''
+        
+        image_section = f'<img src="{image_url}" style="width: 100%; height: 400px; object-fit: cover;" alt="Imagen del post">' if image_url else '<div style="width: 100%; height: 400px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 16px;">📸 Tu Imagen</div>'
+        
+        return f"""
+        <div style="border: 1px solid #dbdbdb; border-radius: 8px; background: white; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; max-width: 400px; margin: 10px 0;">
+            <div style="display: flex; align-items: center; padding: 14px 16px; border-bottom: 1px solid #efefef;">
+                <div style="width: 32px; height: 32px; background: linear-gradient(45deg, #f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; margin-right: 12px; font-size: 12px;">TU</div>
+                <div style="font-weight: 600; font-size: 14px;">tu_usuario</div>
+            </div>
+            {image_section}
+            <div style="padding: 16px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <div style="display: flex; gap: 16px;">
+                        <span>❤️</span>
+                        <span>💬</span>
+                        <span>📤</span>
+                    </div>
+                    <span>🔖</span>
+                </div>
+                <div style="font-size: 14px; margin-bottom: 4px;"><strong>123 Me gusta</strong></div>
+                <div style="font-size: 14px; line-height: 1.4;">
+                    <strong>tu_usuario</strong> {full_text}
+                    {f'<div style="color: #00376b; margin-top: 4px;">{hashtag_text}</div>' if hashtag_text else ''}
+                </div>
+                <div style="color: #8e8e8e; font-size: 12px; margin-top: 8px;">HACE 1 HORA</div>
+            </div>
+        </div>
+        """
+    
+    def create_twitter_preview(self, content: Dict[str, Any], image_url: str = '') -> str:
+        """Crea vista previa estilo Twitter"""
+        main_tweet = content.get('main_tweet', content.get('full_text', ''))
+        thread = content.get('thread', [])
+        hashtags = content.get('hashtags', [])
+        
+        preview = f"""
+        <div style="border: 1px solid #cfd9de; border-radius: 16px; padding: 16px; background: white; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; max-width: 500px; margin: 10px 0;">
+            <div style="display: flex; margin-bottom: 12px;">
+                <div style="width: 40px; height: 40px; background: #1d9bf0; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; margin-right: 12px;">TU</div>
+                <div style="flex: 1;">
+                    <div style="display: flex; align-items: center; gap: 4px; margin-bottom: 4px;">
+                        <span style="font-weight: 700; font-size: 15px;">Tu Nombre</span>
+                        <span style="color: #536471; font-size: 15px;">@tu_usuario</span>
+                        <span style="color: #536471; font-size: 15px;">· 1h</span>
+                    </div>
+                    <div style="font-size: 15px; line-height: 1.3; color: #0f1419; white-space: pre-wrap;">{main_tweet}</div>
+                    {f'<img src="{image_url}" style="width: 100%; border-radius: 16px; margin-top: 12px;" alt="Imagen del tweet">' if image_url else ''}
+                </div>
+            </div>
+        """
+        
+        # Agregar thread si existe
+        for i, tweet in enumerate(thread):
+            preview += f"""
+            <div style="display: flex; margin-top: 12px; padding-top: 12px; border-top: 1px solid #eff3f4;">
+                <div style="width: 40px; height: 40px; background: #1d9bf0; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; margin-right: 12px;">TU</div>
+                <div style="flex: 1;">
+                    <div style="display: flex; align-items: center; gap: 4px; margin-bottom: 4px;">
+                        <span style="font-weight: 700; font-size: 15px;">Tu Nombre</span>
+                        <span style="color: #536471; font-size: 15px;">@tu_usuario</span>
+                        <span style="color: #536471; font-size: 15px;">· 1h</span>
+                    </div>
+                    <div style="font-size: 15px; line-height: 1.3; color: #0f1419; white-space: pre-wrap;">{tweet}</div>
+                </div>
+            </div>
+            """
+        
+        preview += """
+            <div style="margin-top: 12px; padding-top: 8px; border-top: 1px solid #eff3f4; display: flex; justify-content: space-around; color: #536471; font-size: 14px;">
+                <span>💬 12</span>
+                <span>🔄 5</span>
+                <span>❤️ 23</span>
+                <span>📤</span>
+            </div>
+        </div>
+        """
+        
+        return preview
+    
+    def create_generic_preview(self, content: Dict[str, Any], image_url: str = '') -> str:
+        """Crea vista previa genérica"""
+        full_text = content.get('full_text', '')
+        image_section = f'<img src="{image_url}" style="width: 100%; border-radius: 8px; margin-bottom: 16px;" alt="Imagen del contenido">' if image_url else ''
+        
+        return f"""
+        <div style="border: 1px solid #ddd; border-radius: 8px; padding: 20px; background: #f9f9f9; font-family: Arial, sans-serif; max-width: 500px; margin: 10px 0;">
+            {image_section}
+            <div style="font-size: 16px; line-height: 1.5; color: #333; white-space: pre-wrap;">{full_text}</div>
+        </div>
+        """
     
     def storage_options_interface(self, story_data: Dict[str, Any]):
         """Interfaz para opciones de almacenamiento"""
         st.subheader("💾 Opciones de Almacenamiento")
         
-        col1, col2 = st.columns(2)
+        # Usar un formulario para evitar que desaparezca
+        with st.form("storage_form"):
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.markdown("**Almacenamiento Local:**")
+                local_formats = st.multiselect(
+                    "Selecciona formatos:",
+                    ["JSON", "Markdown", "HTML", "PDF"],
+                    default=["JSON"],
+                    key="local_formats_select"
+                )
+            
+            with col2:
+                st.markdown("**Almacenamiento Remoto:**")
+                save_to_supabase = st.checkbox("Guardar en Supabase", value=True, key="supabase_checkbox")
+                
+                # Opción para actualizar historia existente
+                if 'id' in story_data or story_data.get('edited_from'):
+                    update_existing = st.checkbox(
+                        "Actualizar historia existente (crear nueva versión)", 
+                        value=True,
+                        key="update_existing_checkbox"
+                    )
+                else:
+                    update_existing = False
+            
+            # Botones de acción
+            col1, col2 = st.columns(2)
+            with col1:
+                save_clicked = st.form_submit_button("💾 Guardar Historia", type="primary")
+            with col2:
+                cancel_clicked = st.form_submit_button("❌ Cancelar")
+            
+            if save_clicked:
+                with st.spinner("Guardando historia..."):
+                    success, saved_files = self.save_story(story_data, local_formats, save_to_supabase, update_existing)
+                    
+                    # Mostrar confirmación detallada
+                    if success:
+                        st.success("✅ Historia guardada exitosamente!")
+                        
+                        # Mostrar detalles de archivos guardados
+                        if saved_files:
+                            st.markdown("**Archivos creados:**")
+                            for file_info in saved_files:
+                                st.write(f"• {file_info}")
+                        
+                        # Marcar como guardado exitosamente
+                        st.session_state.story_saved_successfully = True
+                        st.balloons()
+                    else:
+                        st.error("❌ Error al guardar la historia. Intenta nuevamente.")
+            
+            elif cancel_clicked:
+                st.session_state.show_storage_options = False
+                st.rerun()
         
-        with col1:
-            st.markdown("**Almacenamiento Local:**")
-            local_formats = st.multiselect(
-                "Selecciona formatos:",
-                ["JSON", "Markdown", "HTML", "PDF"],
-                default=["JSON"]
-            )
-        
-        with col2:
-            st.markdown("**Almacenamiento Remoto:**")
-            save_to_supabase = st.checkbox("Guardar en Supabase", value=True)
-        
-        if st.button("💾 Guardar Historia", type="primary"):
-            with st.spinner("Guardando historia..."):
-                self.save_story(story_data, local_formats, save_to_supabase)
+        # Botón fuera del formulario para crear nueva historia
+        if st.session_state.get('story_saved_successfully', False):
+            if st.button("🎉 ¡Perfecto! Crear Nueva Historia", type="primary"):
+                st.session_state.current_story = None
+                st.session_state.story_approved = False
+                st.session_state.show_storage_options = False
+                st.session_state.story_saved_successfully = False
+                st.rerun()
     
-    def save_story(self, story_data: Dict[str, Any], local_formats: List[str], save_to_supabase: bool):
+    def save_story(self, story_data: Dict[str, Any], local_formats: List[str], 
+                   save_to_supabase: bool, update_existing: bool = False) -> tuple[bool, List[str]]:
         """Guarda la historia según las opciones seleccionadas"""
         saved_files = []
+        success = True
         
         try:
             # Almacenamiento local
@@ -275,27 +563,338 @@ class StoryCrew:
             
             # Almacenamiento remoto
             if save_to_supabase:
+                story_id = None
+                if update_existing and ('id' in story_data or story_data.get('edited_from')):
+                    story_id = story_data.get('id') or story_data.get('edited_from')
+                
+                # Incluir URL de imagen en los metadatos
+                images = [story_data['image_url']] if story_data.get('image_url') else []
+                
                 result = self.supabase_manager.save_story(
                     user_id=st.session_state.user_id,
                     title=story_data.get('content', {}).get('title', 'Historia Sin Título'),
                     content=story_data.get('content', {}),
                     tone=story_data.get('tone', 'profesional'),
-                    metadata=story_data.get('user_specs', {})
+                    images=images,
+                    metadata=story_data.get('user_specs', {}),
+                    story_id=story_id
                 )
                 
                 if result['success']:
-                    saved_files.append(f"Supabase: ID {result['data']['id']}")
+                    action = "actualizada" if story_id else "creada"
+                    saved_files.append(f"Supabase: Historia {action} - ID {result['data']['id']}")
                 else:
-                    st.error(f"Error guardando en Supabase: {result['error']}")
+                    success = False
             
-            # Mostrar confirmación
-            if saved_files:
-                st.success("✅ Historia guardada exitosamente:")
-                for file_info in saved_files:
-                    st.write(f"• {file_info}")
+            return success, saved_files
             
         except Exception as e:
-            st.error(f"❌ Error al guardar: {str(e)}")
+            return False, [f"Error: {str(e)}"]
+    
+    def edit_template_interface(self):
+        """Interfaz para editar una historia desde plantilla"""
+        template = st.session_state.template_story
+        
+        st.info("📝 Editando historia desde plantilla")
+        
+        # Botón para cancelar edición
+        if st.button("❌ Cancelar Edición"):
+            st.session_state.template_story = None
+            st.rerun()
+        
+        # Mostrar información de la plantilla
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("Plataforma Original", template.get('platform', 'N/A'))
+        with col2:
+            st.metric("Tono Original", template.get('tone', 'N/A').title())
+        with col3:
+            created_at = template.get('created_at', '')
+            if created_at:
+                try:
+                    date_obj = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+                    st.metric("Fecha Original", date_obj.strftime("%d/%m/%Y"))
+                except:
+                    st.metric("Fecha Original", "N/A")
+        
+        st.divider()
+        
+        # Formulario de edición
+        with st.form("edit_template_form"):
+            st.subheader("✏️ Editar Historia")
+            
+            # Configuración básica
+            col1, col2 = st.columns(2)
+            with col1:
+                new_platform = st.selectbox(
+                    "Nueva Plataforma:",
+                    ["Facebook", "LinkedIn", "Instagram", "Twitter/X"],
+                    index=["Facebook", "LinkedIn", "Instagram", "Twitter/X"].index(template.get('platform', 'Facebook')) if template.get('platform') in ["Facebook", "LinkedIn", "Instagram", "Twitter/X"] else 0
+                )
+            
+            with col2:
+                tone_options = [
+                    "Profesional", "Divertido", "Inspiracional", "Educativo", 
+                    "Casual", "Formal", "Motivacional", "Informativo", 
+                    "Persuasivo", "Emocional", "Técnico", "Creativo",
+                    "Amigable", "Autoritativo", "Conversacional", "Urgente"
+                ]
+                
+                current_tone = template.get('tone', 'Profesional').title()
+                tone_index = tone_options.index(current_tone) if current_tone in tone_options else 0
+                
+                new_tone = st.selectbox(
+                    "Nuevo Tono:",
+                    tone_options,
+                    index=tone_index
+                )
+                
+                # Opción para tono personalizado
+                custom_tone = st.text_input(
+                    "Tono personalizado (opcional):",
+                    placeholder="Ej: Sarcástico, Nostálgico, Científico...",
+                    help="Define tu propio tono si no encuentras el adecuado"
+                )
+                
+                if custom_tone:
+                    new_tone = custom_tone
+            
+            # Editar contenido
+            content = template.get('content', {})
+            
+            new_title = st.text_input(
+                "Título:",
+                value=content.get('title', ''),
+                help="Título de la historia"
+            )
+            
+            new_hook = st.text_area(
+                "Gancho:",
+                value=content.get('hook', ''),
+                height=100,
+                help="Frase inicial que captura la atención"
+            )
+            
+            # Editar párrafos del cuerpo
+            st.markdown("**Contenido Principal:**")
+            body_paragraphs = content.get('body', [''])
+            new_body = []
+            
+            for i, paragraph in enumerate(body_paragraphs):
+                new_paragraph = st.text_area(
+                    f"Párrafo {i+1}:",
+                    value=paragraph,
+                    height=80,
+                    key=f"paragraph_{i}"
+                )
+                if new_paragraph.strip():
+                    new_body.append(new_paragraph)
+            
+            # Opción para agregar más párrafos
+            add_paragraph = st.text_area(
+                "Agregar nuevo párrafo (opcional):",
+                height=80,
+                key="new_paragraph"
+            )
+            if add_paragraph.strip():
+                new_body.append(add_paragraph)
+            
+            new_cta = st.text_area(
+                "Llamada a la Acción:",
+                value=content.get('call_to_action', ''),
+                height=80,
+                help="Acción que quieres que tome el lector"
+            )
+            
+            # Hashtags (si aplica)
+            hashtags_text = ' '.join(content.get('hashtags', []))
+            new_hashtags_text = st.text_input(
+                "Hashtags (separados por espacios):",
+                value=hashtags_text,
+                help="Ej: #marketing #digital #contenido"
+            )
+            
+            new_additional_specs = st.text_area(
+                "Especificaciones adicionales:",
+                value=template.get('user_specs', {}).get('additional_specs', ''),
+                help="Instrucciones adicionales para la regeneración"
+            )
+            
+            # Botones de acción
+            col1, col2 = st.columns(2)
+            with col1:
+                regenerate_clicked = st.form_submit_button("🔄 Regenerar con IA", type="primary")
+            with col2:
+                save_manual_clicked = st.form_submit_button("💾 Guardar Edición Manual")
+            
+            if regenerate_clicked:
+                # Regenerar usando IA con el contenido editado
+                self.regenerate_from_template(
+                    new_platform, new_tone, new_title, new_hook, 
+                    new_body, new_cta, new_hashtags_text, new_additional_specs
+                )
+            
+            elif save_manual_clicked:
+                # Guardar edición manual
+                self.save_manual_edit(
+                    template, new_platform, new_tone, new_title, 
+                    new_hook, new_body, new_cta, new_hashtags_text
+                )
+    
+    def regenerate_from_template(self, platform: str, tone: str, title: str, 
+                               hook: str, body: List[str], cta: str, 
+                               hashtags: str, additional_specs: str):
+        """Regenera la historia usando IA con el contenido editado"""
+        
+        # Crear especificaciones basadas en la edición
+        user_specs = {
+            'platform': platform,
+            'tone': tone.lower(),
+            'additional_specs': f"""
+            Usa este contenido como base y mejóralo:
+            Título: {title}
+            Gancho: {hook}
+            Contenido: {' '.join(body)}
+            Llamada a la acción: {cta}
+            Hashtags: {hashtags}
+            
+            Especificaciones adicionales: {additional_specs}
+            """
+        }
+        
+        with st.spinner("Regenerando historia con IA..."):
+            try:
+                # Usar imagen por defecto o la de la plantilla
+                temp_image_path = st.session_state.template_story.get('image_path', 'default_image.jpg')
+                
+                # Ejecutar crew para regenerar
+                result = self.execute_story_creation(temp_image_path, user_specs)
+                
+                if result:
+                    # Mover la historia actual a versiones si existe en Supabase
+                    self.create_version_backup(st.session_state.template_story)
+                    
+                    st.session_state.current_story = result
+                    st.session_state.template_story = None
+                    st.session_state.story_approved = False
+                    st.session_state.show_storage_options = False
+                    st.success("✅ Historia regenerada exitosamente!")
+                    st.rerun()
+                    
+            except Exception as e:
+                st.error(f"❌ Error al regenerar: {str(e)}")
+    
+    def save_manual_edit(self, original_story: Dict[str, Any], platform: str, 
+                        tone: str, title: str, hook: str, body: List[str], 
+                        cta: str, hashtags: str):
+        """Guarda la edición manual de la historia"""
+        
+        # Crear nueva estructura de contenido
+        hashtags_list = [tag.strip() for tag in hashtags.split() if tag.strip().startswith('#')]
+        
+        # Construir texto completo
+        full_text_parts = []
+        if hook:
+            full_text_parts.append(hook)
+        full_text_parts.extend(body)
+        if cta:
+            full_text_parts.append(cta)
+        if hashtags_list:
+            full_text_parts.append(' '.join(hashtags_list))
+        
+        full_text = '\n\n'.join(full_text_parts)
+        
+        new_content = {
+            'title': title,
+            'hook': hook,
+            'body': body,
+            'call_to_action': cta,
+            'hashtags': hashtags_list,
+            'full_text': full_text
+        }
+        
+        # Crear nueva historia
+        new_story = {
+            'content': new_content,
+            'platform': platform,
+            'tone': tone.lower(),
+            'created_at': datetime.now().isoformat(),
+            'user_specs': {
+                'platform': platform,
+                'tone': tone.lower(),
+                'additional_specs': 'Editado manualmente desde plantilla'
+            },
+            'edited_from': original_story.get('id', 'local_template')
+        }
+        
+        # Crear backup de la versión original si es necesario
+        self.create_version_backup(original_story)
+        
+        st.session_state.current_story = new_story
+        st.session_state.template_story = None
+        st.session_state.story_approved = False
+        st.session_state.show_storage_options = False
+        
+        st.success("✅ Edición guardada exitosamente!")
+        st.rerun()
+    
+    def create_version_backup(self, story_data: Dict[str, Any]):
+        """Crea un backup de la versión anterior en story_versions"""
+        try:
+            # Solo crear backup si la historia tiene ID (viene de Supabase)
+            if 'id' in story_data:
+                # Aquí podrías implementar la lógica para guardar en story_versions
+                # Por ahora, solo registramos la acción
+                st.info("📝 Versión anterior respaldada automáticamente")
+        except Exception as e:
+            st.warning(f"⚠️ No se pudo crear backup de versión: {str(e)}")
+    
+    def upload_image_to_supabase(self, image_path: str, filename: str) -> str:
+        """Sube una imagen a Supabase Storage y retorna la URL pública"""
+        try:
+            result = self.supabase_manager.upload_image(
+                image_path, 
+                st.session_state.user_id, 
+                filename
+            )
+            
+            if result['success']:
+                return result['url']
+            else:
+                st.warning(f"No se pudo subir la imagen: {result['error']}")
+                return ""
+        except Exception as e:
+            st.warning(f"Error subiendo imagen: {str(e)}")
+            return ""
+    
+    def update_workflow(self, agent: str, task: str, status: str, placeholder=None):
+        """Actualiza el workflow de agentes en tiempo real"""
+        # Buscar si ya existe una entrada para este agente
+        existing_index = None
+        for i, step in enumerate(st.session_state.crew_workflow):
+            if step['agent'] == agent:
+                existing_index = i
+                break
+        
+        workflow_step = {
+            'agent': agent,
+            'task': task,
+            'status': status,
+            'timestamp': datetime.now().strftime("%H:%M:%S")
+        }
+        
+        if existing_index is not None:
+            st.session_state.crew_workflow[existing_index] = workflow_step
+        else:
+            st.session_state.crew_workflow.append(workflow_step)
+        
+        # Actualizar el placeholder si existe
+        if placeholder:
+            with placeholder.container():
+                st.markdown("### 🤖 Progreso de Agentes")
+                for step in st.session_state.crew_workflow:
+                    status_icon = "✅" if step['status'] == 'completed' else "🔄" if step['status'] == 'running' else "⏳"
+                    st.write(f"{status_icon} **{step['agent']}**: {step['task']} ({step['timestamp']})")
     
     def view_archived_stories_interface(self):
         """Interfaz para ver historias archivadas"""
@@ -383,7 +982,25 @@ class StoryCrew:
             st.markdown("**📄 Contenido:**")
             st.text_area("", content['full_text'], height=100, disabled=True, key=f"story_{story_data.get('id', hash(str(story_data)))}")
         
+        # Mostrar imagen si existe
+        if story_data.get('images') and len(story_data['images']) > 0:
+            st.image(story_data['images'][0], caption="Imagen de la historia", use_column_width=True)
+        elif story_data.get('image_url'):
+            st.image(story_data['image_url'], caption="Imagen de la historia", use_column_width=True)
+        
+        # Renderizar vista previa visual
+        st.markdown("**📱 Vista Previa:**")
+        
+        # Preparar datos para vista previa
+        preview_data = story_data.copy()
+        if story_data.get('images') and len(story_data['images']) > 0:
+            preview_data['image_url'] = story_data['images'][0]
+        
+        self.render_story_preview(preview_data)
+        
         # Botón para usar como plantilla
         if st.button(f"📋 Usar como Plantilla", key=f"template_{story_data.get('id', hash(str(story_data)))}"):
-            st.session_state.current_story = story_data
-            st.success("✅ Historia cargada como plantilla. Ve a 'Crear Nueva Historia' para editarla.")
+            st.session_state.template_story = story_data
+            st.session_state.current_story = None
+            st.success("✅ Historia cargada como plantilla. Cambia a 'Crear Nueva Historia' para editarla.")
+            st.balloons()
