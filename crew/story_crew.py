@@ -7,13 +7,25 @@ from crew.agents import StoryAgents
 from crew.tasks import StoryTasks
 from utils.supabase_client import SupabaseManager
 from utils.file_manager import FileManager
+from utils.config import update_credentials_interface
 from typing import Dict, Any, List
 
 class StoryCrew:
     def __init__(self):
-        self.agents = StoryAgents()
-        self.tasks = StoryTasks(self.agents)
-        self.supabase_manager = SupabaseManager()
+        try:
+            self.agents = StoryAgents()
+            self.tasks = StoryTasks(self.agents)
+        except Exception as e:
+            st.warning(f"⚠️ Error inicializando agentes: {str(e)}")
+            self.agents = None
+            self.tasks = None
+        
+        try:
+            self.supabase_manager = SupabaseManager()
+        except Exception as e:
+            st.warning(f"⚠️ Error conectando con Supabase: {str(e)}")
+            self.supabase_manager = None
+        
         self.file_manager = FileManager()
         
         # Inicializar estado de la sesión
@@ -41,7 +53,7 @@ class StoryCrew:
             
             mode = st.radio(
                 "Selecciona una opción:",
-                ["📝 Crear Nueva Historia", "📚 Ver Historias Archivadas"],
+                ["📝 Crear Nueva Historia", "📚 Ver Historias Archivadas", "⚙️ Configuración"],
                 key="main_mode"
             )
             
@@ -59,8 +71,10 @@ class StoryCrew:
         
         if mode == "📝 Crear Nueva Historia":
             self.create_story_interface()
-        else:
+        elif mode == "📚 Ver Historias Archivadas":
             self.view_archived_stories_interface()
+        else:
+            self.configuration_interface()
     
     def create_story_interface(self):
         """Interfaz para crear una nueva historia"""
@@ -83,7 +97,7 @@ class StoryCrew:
         
         if uploaded_file is not None:
             # Mostrar imagen
-            st.image(uploaded_file, caption="Imagen seleccionada", use_column_width=True)
+            st.image(uploaded_file, caption="Imagen seleccionada")
             
             # Guardar imagen temporalmente
             temp_image_path = f"temp_{uploaded_file.name}"
@@ -149,9 +163,18 @@ class StoryCrew:
                         'additional_specs': additional_specs
                     }
                     
-                    # Subir imagen a Supabase primero
-                    with st.spinner("Subiendo imagen..."):
-                        image_url = self.upload_image_to_supabase(temp_image_path, uploaded_file.name)
+                    # Subir imagen a Supabase primero (si está disponible)
+                    image_url = ""
+                    if self.supabase_manager:
+                        with st.spinner("Subiendo imagen..."):
+                            image_url = self.upload_image_to_supabase(temp_image_path, uploaded_file.name)
+                    else:
+                        st.info("ℹ️ Supabase no configurado - la imagen no se subirá al almacenamiento remoto.")
+                    
+                    # Verificar que los agentes estén disponibles
+                    if not self.agents or not self.tasks:
+                        st.error("❌ Los agentes de IA no están configurados. Verifica tu clave de Gemini en Configuración.")
+                        return
                     
                     # Ejecutar el crew con seguimiento en tiempo real
                     with st.spinner("Analizando imagen y creando contenido..."):
@@ -188,7 +211,6 @@ class StoryCrew:
         
         # Crear tareas
         analyze_task = self.tasks.analyze_image_task(image_path)
-        
         # Determinar qué agente de plataforma usar
         platform = user_specs['platform'].lower()
         if platform == 'facebook':
@@ -209,6 +231,7 @@ class StoryCrew:
         
         # Crear crew
         crew = Crew(
+            # self.agents.voice_agent, self.agents.user_interaction_agent(), 
             agents=[self.agents.vision_agent(), content_agent],
             tasks=[analyze_task, content_task],
             process=Process.sequential,
@@ -261,7 +284,7 @@ class StoryCrew:
         if story_data.get('image_url'):
             col1, col2 = st.columns([1, 2])
             with col1:
-                st.image(story_data['image_url'], caption="Imagen de la historia", use_column_width=True)
+                st.image(story_data['image_url'], caption="Imagen de la historia")
             with col2:
                 # Mostrar información básica
                 st.metric("Plataforma", story_data.get('platform', 'N/A'))
@@ -508,7 +531,25 @@ class StoryCrew:
             
             if save_clicked:
                 with st.spinner("Guardando historia..."):
-                    success, saved_files = self.save_story(story_data, local_formats, save_to_supabase, update_existing)
+                    
+                    storage_task = self.tasks.storage_task(story_data,local_formats,save_to_supabase)
+        
+                    crew2 = Crew(
+                        agents=[self.agents.storage_agent()],
+                        tasks=[storage_task],
+                        process=Process.sequential,
+                        verbose=True
+                    )
+        
+                    # Ejecutar crew con seguimiento
+                    self.update_workflow("Agente de Almacenamiento", "Guardando historia", "running")  #, workflow_placeholder
+        
+                    result = crew2.kickoff()      
+     
+                    success = result["success"]
+                    saved_files = result["saved_files"]
+
+                    # success, saved_files = self.save_story(story_data, local_formats, save_to_supabase, update_existing)
                     
                     # Mostrar confirmación detallada
                     if success:
@@ -563,28 +604,32 @@ class StoryCrew:
             
             # Almacenamiento remoto
             if save_to_supabase:
-                story_id = None
-                if update_existing and ('id' in story_data or story_data.get('edited_from')):
-                    story_id = story_data.get('id') or story_data.get('edited_from')
-                
-                # Incluir URL de imagen en los metadatos
-                images = [story_data['image_url']] if story_data.get('image_url') else []
-                
-                result = self.supabase_manager.save_story(
-                    user_id=st.session_state.user_id,
-                    title=story_data.get('content', {}).get('title', 'Historia Sin Título'),
-                    content=story_data.get('content', {}),
-                    tone=story_data.get('tone', 'profesional'),
-                    images=images,
-                    metadata=story_data.get('user_specs', {}),
-                    story_id=story_id
-                )
-                
-                if result['success']:
-                    action = "actualizada" if story_id else "creada"
-                    saved_files.append(f"Supabase: Historia {action} - ID {result['data']['id']}")
-                else:
+                if not self.supabase_manager:
+                    st.error("❌ Supabase no está configurado. No se puede guardar remotamente.")
                     success = False
+                else:
+                    story_id = None
+                    if update_existing and ('id' in story_data or story_data.get('edited_from')):
+                        story_id = story_data.get('id') or story_data.get('edited_from')
+                    
+                    # Incluir URL de imagen en los metadatos
+                    images = [story_data['image_url']] if story_data.get('image_url') else []
+                    
+                    result = self.supabase_manager.save_story(
+                        user_id=st.session_state.user_id,
+                        title=story_data.get('content', {}).get('title', 'Historia Sin Título'),
+                        content=story_data.get('content', {}),
+                        tone=story_data.get('tone', 'profesional'),
+                        images=images,
+                        metadata=story_data.get('user_specs', {}),
+                        story_id=story_id
+                    )
+                    
+                    if result['success']:
+                        action = "actualizada" if story_id else "creada"
+                        saved_files.append(f"Supabase: Historia {action} - ID {result['data']['id']}")
+                    else:
+                        success = False
             
             return success, saved_files
             
@@ -920,14 +965,41 @@ class StoryCrew:
             st.info("📭 No se encontraron historias locales.")
             return
         
-        st.write(f"📊 Se encontraron {len(stories)} historias locales.")
+        # Contar por tipo de archivo
+        file_types = {}
+        for story in stories:
+            file_type = story.get('file_type', 'unknown')
+            file_types[file_type] = file_types.get(file_type, 0) + 1
+        
+        # Mostrar estadísticas
+        type_summary = ", ".join([f"{count} {ftype.upper()}" for ftype, count in file_types.items()])
+        st.write(f"📊 Se encontraron {len(stories)} historias locales: {type_summary}")
+        
+        # Iconos por tipo de archivo
+        file_type_icons = {
+            'json': '📄',
+            'markdown': '📝', 
+            'html': '🌐',
+            'pdf': '📕',
+            'unknown': '❓'
+        }
         
         for i, story in enumerate(stories):
-            with st.expander(f"📖 {story.get('content', {}).get('title', f'Historia {i+1}')} - {story.get('platform', 'N/A')}"):
+            file_type = story.get('file_type', 'unknown')
+            icon = file_type_icons.get(file_type, '📄')
+            title = story.get('content', {}).get('title', f'Historia {i+1}')
+            platform = story.get('platform', 'N/A')
+            filename = story.get('filename', 'N/A')
+            
+            with st.expander(f"{icon} {title} - {platform} ({filename})"):
                 self.display_story_details(story)
     
     def display_remote_stories(self):
         """Muestra historias de la base de datos remota"""
+        if not self.supabase_manager:
+            st.error("❌ Supabase no está configurado. Ve a Configuración para configurar las credenciales.")
+            return
+        
         try:
             result = self.supabase_manager.get_stories(st.session_state.user_id)
             
@@ -951,7 +1023,9 @@ class StoryCrew:
                         'platform': story.get('metadata', {}).get('platform', 'N/A'),
                         'tone': story.get('tone', 'N/A'),
                         'created_at': story.get('created_at', ''),
-                        'id': story.get('id')
+                        'id': story.get('id'),
+                        'images': story.get('images', []),  # Agregar imágenes de Supabase
+                        'image_url': story.get('images', [None])[0] if story.get('images') else None  # Primera imagen como URL principal
                     }
                     self.display_story_details(story_data)
         
@@ -963,7 +1037,7 @@ class StoryCrew:
         content = story_data.get('content', {})
         
         # Información básica
-        col1, col2, col3 = st.columns(3)
+        col1, col2, col3, col4 = st.columns(4)
         with col1:
             st.metric("Plataforma", story_data.get('platform', 'N/A'))
         with col2:
@@ -976,31 +1050,216 @@ class StoryCrew:
                     st.metric("Fecha", date_obj.strftime("%d/%m/%Y"))
                 except:
                     st.metric("Fecha", "N/A")
+        with col4:
+            # Mostrar tipo de archivo si es local
+            file_type = story_data.get('file_type', '')
+            if file_type:
+                file_type_labels = {
+                    'json': '📄 JSON',
+                    'markdown': '📝 Markdown', 
+                    'html': '🌐 HTML',
+                    'pdf': '📕 PDF'
+                }
+                st.metric("Tipo", file_type_labels.get(file_type, f"📄 {file_type.upper()}"))
         
         # Contenido
         if 'full_text' in content:
             st.markdown("**📄 Contenido:**")
-            st.text_area("", content['full_text'], height=100, disabled=True, key=f"story_{story_data.get('id', hash(str(story_data)))}")
+            st.text_area("Contenido de la historia", content['full_text'], height=100, disabled=True, key=f"story_{story_data.get('id', hash(str(story_data)))}", label_visibility="collapsed")
         
         # Mostrar imagen si existe
-        if story_data.get('images') and len(story_data['images']) > 0:
-            st.image(story_data['images'][0], caption="Imagen de la historia", use_column_width=True)
-        elif story_data.get('image_url'):
-            st.image(story_data['image_url'], caption="Imagen de la historia", use_column_width=True)
+        image_url = None
+        
+        # Priorizar diferentes fuentes de imagen
+        if story_data.get('image_url'):
+            image_url = story_data['image_url']
+        elif story_data.get('images') and len(story_data['images']) > 0:
+            image_url = story_data['images'][0]
+        elif story_data.get('content', {}).get('image_url'):
+            image_url = story_data['content']['image_url']
+        
+        if image_url:
+            try:
+                st.image(image_url, caption="Imagen de la historia")
+            except Exception as e:
+                st.warning(f"⚠️ No se pudo cargar la imagen: {str(e)}")
+                st.text(f"URL de imagen: {image_url}")
+        else:
+            st.info("📷 No hay imagen asociada a esta historia")
         
         # Renderizar vista previa visual
         st.markdown("**📱 Vista Previa:**")
         
         # Preparar datos para vista previa
         preview_data = story_data.copy()
-        if story_data.get('images') and len(story_data['images']) > 0:
-            preview_data['image_url'] = story_data['images'][0]
+        
+        # Asegurar que tenemos una URL de imagen para la vista previa
+        if not preview_data.get('image_url'):
+            if story_data.get('images') and len(story_data['images']) > 0:
+                preview_data['image_url'] = story_data['images'][0]
+            elif story_data.get('content', {}).get('image_url'):
+                preview_data['image_url'] = story_data['content']['image_url']
         
         self.render_story_preview(preview_data)
         
-        # Botón para usar como plantilla
-        if st.button(f"📋 Usar como Plantilla", key=f"template_{story_data.get('id', hash(str(story_data)))}"):
-            st.session_state.template_story = story_data
-            st.session_state.current_story = None
-            st.success("✅ Historia cargada como plantilla. Cambia a 'Crear Nueva Historia' para editarla.")
-            st.balloons()
+        # Botones de acción
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            if st.button(f"📋 Usar como Plantilla", key=f"template_{story_data.get('id', hash(str(story_data)))}"):
+                st.session_state.template_story = story_data
+                st.session_state.current_story = None
+                st.success("✅ Historia cargada como plantilla. Cambia a 'Crear Nueva Historia' para editarla.")
+                st.balloons()
+        
+        with col2:
+            if st.button(f"🗑️ Eliminar Historia", key=f"delete_{story_data.get('id', hash(str(story_data)))}", type="secondary"):
+                self.delete_story_interface(story_data)
+    
+    def delete_story_interface(self, story_data: Dict[str, Any]):
+        """Interfaz para confirmar eliminación de historia"""
+        story_title = story_data.get('content', {}).get('title', 'Historia sin título')
+        
+        # Usar un modal de confirmación
+        if f"confirm_delete_{story_data.get('id', hash(str(story_data)))}" not in st.session_state:
+            st.session_state[f"confirm_delete_{story_data.get('id', hash(str(story_data)))}"] = False
+        
+        if not st.session_state[f"confirm_delete_{story_data.get('id', hash(str(story_data)))}"] :
+            st.session_state[f"confirm_delete_{story_data.get('id', hash(str(story_data)))}"] = True
+            st.rerun()
+        
+        st.error(f"⚠️ ¿Estás seguro de que quieres eliminar '{story_title}'?")
+        st.warning("Esta acción no se puede deshacer.")
+        
+        col1, col2, col3 = st.columns([1, 1, 1])
+        
+        with col1:
+            if st.button("❌ Cancelar", key=f"cancel_delete_{story_data.get('id', hash(str(story_data)))}"):
+                st.session_state[f"confirm_delete_{story_data.get('id', hash(str(story_data)))}"] = False
+                st.rerun()
+        
+        with col3:
+            if st.button("🗑️ Confirmar Eliminación", key=f"confirm_delete_btn_{story_data.get('id', hash(str(story_data)))}", type="primary"):
+                success = self.delete_story(story_data)
+                if success:
+                    st.success("✅ Historia eliminada exitosamente.")
+                    st.session_state[f"confirm_delete_{story_data.get('id', hash(str(story_data)))}"] = False
+                    st.rerun()
+                else:
+                    st.error("❌ Error al eliminar la historia.")
+    
+    def delete_story(self, story_data: Dict[str, Any]) -> bool:
+        """Elimina una historia (local o remota)"""
+        try:
+            # Si tiene ID, es una historia remota
+            if 'id' in story_data:
+                if not self.supabase_manager:
+                    st.error("❌ Supabase no está configurado. No se puede eliminar historia remota.")
+                    return False
+                
+                result = self.supabase_manager.delete_story(
+                    story_data['id'], 
+                    st.session_state.user_id
+                )
+                return result['success']
+            
+            # Si tiene filepath, es una historia local
+            elif 'filepath' in story_data:
+                return self.file_manager.delete_local_story(story_data['filepath'])
+            
+            return False
+            
+        except Exception as e:
+            st.error(f"Error al eliminar historia: {str(e)}")
+            return False
+    
+    def configuration_interface(self):
+        """Interfaz de configuración"""
+        st.header("⚙️ Configuración del Sistema")
+        
+        tab1, tab2, tab3 = st.tabs(["🔑 Credenciales", "👤 Usuario", "📊 Sistema"])
+        
+        with tab1:
+            st.subheader("🔑 Gestión de Credenciales")
+            
+            # Mostrar estado actual de las credenciales
+            st.markdown("**Estado Actual de las Credenciales:**")
+            
+            credentials_status = {
+                "🤖 Gemini API": "✅ Configurado" if os.getenv('GEMINI_API_KEY') else "❌ No configurado",
+                "🌐 Supabase URL": "✅ Configurado" if os.getenv('SUPABASE_URL') else "❌ No configurado",
+                "🔑 Supabase Key": "✅ Configurado" if os.getenv('SUPABASE_KEY') else "❌ No configurado",
+                "🔐 Supabase Secret": "✅ Configurado" if os.getenv('SUPABASE_SECRET_KEY') else "❌ No configurado",
+                "📊 AgentOps API": "✅ Configurado" if os.getenv('AGENTOPS_API_KEY') else "❌ No configurado"
+            }
+            
+            for service, status in credentials_status.items():
+                st.write(f"{service}: {status}")
+            
+            st.divider()
+            
+            # Interfaz para actualizar credenciales
+            update_credentials_interface()
+        
+        with tab2:
+            st.subheader("👤 Configuración de Usuario")
+            
+            current_user_id = st.session_state.get('user_id', 'demo_user')
+            
+            new_user_id = st.text_input(
+                "ID de Usuario:",
+                value=current_user_id,
+                help="Identificador único para tus historias"
+            )
+            
+            if st.button("💾 Actualizar Usuario"):
+                st.session_state.user_id = new_user_id
+                st.success(f"✅ Usuario actualizado a: {new_user_id}")
+        
+        with tab3:
+            st.subheader("📊 Información del Sistema")
+            
+            # Estadísticas del sistema
+            try:
+                # Contar historias locales
+                local_stories = self.file_manager.load_stories_from_folder()
+                local_count = len(local_stories)
+                
+                # Contar historias remotas
+                remote_count = 0
+                if self.supabase_manager:
+                    remote_result = self.supabase_manager.get_stories(st.session_state.user_id)
+                    remote_count = len(remote_result['data']) if remote_result['success'] else 0
+                
+                col1, col2, col3 = st.columns(3)
+                
+                with col1:
+                    st.metric("📁 Historias Locales", local_count)
+                
+                with col2:
+                    st.metric("☁️ Historias Remotas", remote_count)
+                
+                with col3:
+                    st.metric("📊 Total", local_count + remote_count)
+                
+            except Exception as e:
+                st.error(f"Error obteniendo estadísticas: {str(e)}")
+            
+            st.divider()
+            
+            # Información de versión y estado
+            st.markdown("**Información del Sistema:**")
+            st.write(f"• Usuario actual: `{st.session_state.user_id}`")
+            st.write(f"• Directorio de historias: `{self.file_manager.base_path}`")
+            
+            # Botón para limpiar caché
+            if st.button("🧹 Limpiar Caché de Sesión"):
+                # Limpiar variables de sesión excepto user_id
+                keys_to_keep = ['user_id']
+                keys_to_remove = [key for key in st.session_state.keys() if key not in keys_to_keep]
+                
+                for key in keys_to_remove:
+                    del st.session_state[key]
+                
+                st.success("✅ Caché limpiado exitosamente.")
+                st.rerun()

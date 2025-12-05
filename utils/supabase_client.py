@@ -138,8 +138,15 @@ class SupabaseManager:
             return ""
     
     def delete_story(self, story_id: str, user_id: str) -> Dict:
-        """Elimina una historia"""
+        """Elimina una historia y sus versiones asociadas"""
         try:
+            # Primero eliminar las versiones asociadas
+            self.client.table("story_versions")\
+                .delete()\
+                .eq("story_id", story_id)\
+                .execute()
+            
+            # Luego eliminar la historia principal
             result = self.client.table("stories")\
                 .delete()\
                 .eq("id", story_id)\
@@ -147,5 +154,13 @@ class SupabaseManager:
                 .execute()
             
             return {"success": True, "data": result.data}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+    
+    def delete_image(self, image_path: str) -> Dict:
+        """Elimina una imagen del storage de Supabase"""
+        try:
+            result = self.client.storage.from_("story-images").remove([image_path])
+            return {"success": True, "data": result}
         except Exception as e:
             return {"success": False, "error": str(e)}

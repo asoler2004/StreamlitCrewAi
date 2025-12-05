@@ -1,0 +1,17 @@
+{
+  "content": {
+    "title": "Historia Generada",
+    "full_text": "```json\n{\n  \"title\": \"Análisis 'Experto' del Partido (Gracias, Don Nadie)\",\n  \"main_tweet\": \"Ah, en serio no me digas que *ese* fue penal. 🙄 Pensé que estaban jugando a las canicas con el balón. #Futbol #ObviedadesDelFutbol\",\n  \"thread\": [\n    \"Y el comentarista diciendo '¡Qué gran partido!'. Sí, genio, como todos los empates 0-0 a las 3 AM. 😴\",\n    \"Lo mejor de todo es la táctica innovadora del equipo: patear el balón lo más lejos posible. Estrategia nivel Champions. 🧠\",\n    \"Pero eh, al menos la publicidad estuvo entretenida. Casi me olvido que estaba viendo un partido de fútbol. 😅\"\n  ],\n  \"hashtags\": [\"#Futbol\", \"#ObviedadesDelFutbol\"],\n  \"call_to_action\": \"¿Cuál fue el momento más 'Ah, en serio no me digas' del partido? ¡Comenta abajo! 👇\",\n  \"full_text\": \"Ah, en serio no me digas que *ese* fue penal. 🙄 Pensé que estaban jugando a las canicas con el balón. #Futbol #ObviedadesDelFutbol\\n\\nY el comentarista diciendo '¡Qué gran partido!'. Sí, genio, como todos los empates 0-0 a las 3 AM. 😴\\n\\nLo mejor de todo es la táctica innovadora del equipo: patear el balón lo más lejos posible. Estrategia nivel Champions. 🧠\\n\\nPero eh, al menos la publicidad estuvo entretenida. Casi me olvido que estaba viendo un partido de fútbol. 😅\\n\\n¿Cuál fue el momento más 'Ah, en serio no me digas' del partido? ¡Comenta abajo! 👇\"\n}\n```"
+  },
+  "platform": "Twitter/X",
+  "tone": "sarcástico",
+  "image_path": "temp_Ah enserio no me digas.jpg",
+  "created_at": "2025-12-05T17:45:14.958718",
+  "user_specs": {
+    "platform": "Twitter/X",
+    "tone": "sarcástico",
+    "additional_specs": "Posteo acerca de un partido de futbol."
+  },
+  "image_url": "https://myufeyvpvvhupgnuqunm.supabase.co/storage/v1/object/public/story-images/demo_user/20251205_174456_Ah%20enserio%20no%20me%20digas.jpg",
+  "original_filename": "Ah enserio no me digas.jpg"
+}

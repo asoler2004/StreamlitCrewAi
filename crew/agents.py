@@ -1,10 +1,28 @@
 from crewai import Agent
 from Models.gemini import gemini_llm
 from Tools.blip_caption_tool import blip_caption_tool
+from Tools.SpeechTranscriptionTool import speech_transcription_tool
+from Tools.SaveStoryTool import save_story_tool
 
 class StoryAgents:
     def __init__(self):
         self.llm = gemini_llm
+    
+    def voice_agent(self):
+        return Agent(
+            role="Voice Transcriptor",
+            goal="Capturar voz y hacer una transcripción de lo hablado.",
+            backstory=(
+                "Eres un transcriptor experto en español e inglés. Transcribes el lenguage hablado del usuario, corrigiendo errores"
+                "en el habla, y pones a disposición la transcripción en formato texto para que otros agentes puedan realizar la tarea solicitada por el usuario."
+            ),
+            tools=[speech_transcription_tool],
+            # , text_to_speech_tool],
+            llm=self.llm,
+            verbose=True,
+            allow_delegation=False
+
+        )
     
     def user_interaction_agent(self):
         return Agent(
@@ -92,5 +110,6 @@ class StoryAgents:
             También te aseguras de que las imágenes se almacenen correctamente y que todos los metadatos estén completos.""",
             verbose=True,
             allow_delegation=False,
-            llm=self.llm
+            llm=self.llm,
+            tools=[save_story_tool]
         )

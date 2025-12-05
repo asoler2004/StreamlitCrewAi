@@ -1,10 +1,27 @@
 from crewai import Task
-from typing import Dict, Any
+from typing import Dict, List, Any
 
 class StoryTasks:
     def __init__(self, agents):
         self.agents = agents
     
+    def speech_transcription_task(self, image_path: str) -> Task:
+        return Task(
+            description= (
+                "Captura el audio de la voz del usuario y genera una transcripción del pedido del usuario."
+                "Interpreta correctamente las palabras que pueden ser principalmente en español con algunas palabras en inglés."
+                "Corrige ruidos o errores del lenguaje para que el texto transcripto sea correcto desde el punto de vista semántico y sintáctico."        
+                "Extrae e identifica: 1) ruta/nombre del archivo de imagen requerido, 2) Tono deseado para la publicación, 3) Red social de destino."
+                "Si no puedes identificar estos tres campos, vuelve a iniciar la interacción con el usuario."
+                "No inventes nuevo texto, sólo entrega una transcripción clara y estructurada."
+        
+            ),
+            expected_output=(
+                "Un texto con la transcripción de lo dicho por el usuario, estructurada con las siguientes claves: image_name, tone, social_network, full_transcription."
+            ),
+            agent=self.agents.voice_agent()
+        )
+
     def analyze_image_task(self, image_path: str) -> Task:
         return Task(
             description=f"""
@@ -150,15 +167,19 @@ class StoryTasks:
             }"""
         )
     
-    def storage_task(self, content: Dict[str, Any], storage_options: Dict[str, Any]) -> Task:
+    def storage_task(self, story_data: Dict[str, Any], local_formats: List[str], 
+                   save_to_supabase: bool, update_existing: bool = False) -> Task:
         return Task(
             description=f"""
             Gestiona el almacenamiento del contenido creado según las opciones especificadas:
             
-            Contenido a almacenar: {content}
-            Opciones de almacenamiento: {storage_options}
-            
+            Contenido a almacenar: {story_data}
+            Formatos de almacenamiento Locales seleccionados: {local_formats}
+            Guardar o no en supabase: {save_to_supabase} 
+            Actualizar historia existente: {update_existing}
+
             Tu trabajo es:
+            Cuando se presione el botón 'Guardar historia':
             1. Si se solicita almacenamiento local, guardar en los formatos especificados (JSON, MD, HTML, PDF)
             2. Si se solicita almacenamiento remoto, guardar en la base de datos Supabase
             3. Si hay imágenes, subirlas al storage correspondiente
@@ -168,5 +189,11 @@ class StoryTasks:
             Mantén la integridad de los datos y asegúrate de que el contenido esté correctamente estructurado.
             """,
             agent=self.agents.storage_agent(),
-            expected_output="Confirmación detallada del almacenamiento realizado, incluyendo rutas de archivos creados y/o IDs de base de datos."
-        )
+            expected_output="""Un objeto JSON con la estructura:
+            {
+                "success": True,
+                "saved_files": ["JSON: /path/filename1.json", "PDF: /path/filename2.md", "Supabase: Historia creada - ID 2908624e-7bce-41b2-b892-3b0e4d832fe4"] (si aplica),
+            }"""
+            
+        )   
+       
