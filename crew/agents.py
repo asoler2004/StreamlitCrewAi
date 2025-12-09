@@ -3,6 +3,8 @@ from Models.gemini import gemini_llm
 from Tools.blip_caption_tool import blip_caption_tool
 from Tools.SpeechTranscriptionTool import speech_transcription_tool
 from Tools.SaveStoryTool import save_story_tool
+from Tools.PublishInstagramStoryTool import publish_instagram_story_tool
+
 
 class StoryAgents:
     def __init__(self):
@@ -112,4 +114,18 @@ class StoryAgents:
             allow_delegation=False,
             llm=self.llm,
             tools=[save_story_tool]
+        )
+
+    def publication_agent(self):
+        return Agent(
+            role="Agente de Publicaciones en Redes Sociales",
+            goal="Gestionar la publicación de historias en Facebook, LinkedIn, Instagram.",
+            backstory="""Eres un especialista en Publicaciones en redes sociales. Tu trabajo es interactuar 
+            con las API de Facebook, Instagram y LinkedIn para subir la historia seleccionada. 
+            Cada red social tiene una manera distinta de interactuar, por lo tanto debes seleccionar 
+            La herramienta adecuada para cada red social de acuerdo al parámetro {platform} de la historia.""",
+            verbose=True,
+            allow_delegation=False,
+            llm=self.llm,
+            tools=[publish_instagram_story_tool]
         )

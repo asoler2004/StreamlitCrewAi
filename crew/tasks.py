@@ -196,4 +196,24 @@ class StoryTasks:
             }"""
             
         )   
+
+    def publish_task(self, story_data: Dict[str, Any]) -> Task:
+        return Task(
+            description=f"""
+            Gestiona la publicación de la historia seleccionada almacenada en el Json {story_data}:
+            
+            Ruta de la imagen a publicar: en el campo 'image_url' del Json
+            Texto a publicar: en el campo 'content' del json
+            Plataforma de publicación: en el campo 'platform' del json.
+            
+            Tu trabajo es:
+            1. Seleccionar la herramienta adecuada para interactuar con la red social especificada en 'platform' del json con la historia.
+            2. Utilizar la herramienta para publicar la imagen especificada en el campo 'image_url' y el texto en 'content' en la plataforma correspondiente a 'platform'.
+            3. Proporcionar confirmación de que la publicación fue exitosa.
+            
+            """,
+            agent=self.agents.publication_agent(),
+            expected_output="""Un texto con el resultado de la publicación."""
+            
+        )      
        

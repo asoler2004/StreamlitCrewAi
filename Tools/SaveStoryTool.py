@@ -1,5 +1,8 @@
 from crewai.tools import BaseTool
 from typing import Dict, List, Any
+import sys
+sys.path.append('../')
+
 from utils.supabase_client import SupabaseManager
 from utils.file_manager import FileManager
 

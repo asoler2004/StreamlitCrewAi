@@ -146,6 +146,7 @@ def update_credentials_interface():
             
             if new_gemini_key.strip():
                 updates['GEMINI_API_KEY'] = new_gemini_key.strip()
+                print(new_gemini_key)
             if new_supabase_url.strip():
                 updates['SUPABASE_URL'] = new_supabase_url.strip()
             if new_supabase_key.strip():

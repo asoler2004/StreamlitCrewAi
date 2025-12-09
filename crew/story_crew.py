@@ -8,7 +8,12 @@ from crew.tasks import StoryTasks
 from utils.supabase_client import SupabaseManager
 from utils.file_manager import FileManager
 from utils.config import update_credentials_interface
+from utils.publicar import login_user,post_image, generate_daily_schedule, schedule_and_post
 from typing import Dict, Any, List
+import requests
+from io import BytesIO
+from PIL import Image
+from pathlib import Path
 
 class StoryCrew:
     def __init__(self):
@@ -344,7 +349,8 @@ class StoryCrew:
     
     def create_facebook_preview(self, content: Dict[str, Any], image_url: str = '') -> str:
         """Crea vista previa estilo Facebook"""
-        full_text = content.get('full_text', '')
+        # full_text = content.get('full_text', '')
+        full_text = content.get('body', '')
         image_section = f'<img src="{image_url}" style="width: 100%; border-radius: 8px; margin: 12px 0;" alt="Imagen del post">' if image_url else ''
         
         return f"""
@@ -368,7 +374,8 @@ class StoryCrew:
     
     def create_linkedin_preview(self, content: Dict[str, Any], image_url: str = '') -> str:
         """Crea vista previa estilo LinkedIn"""
-        full_text = content.get('full_text', '')
+        # full_text = content.get('full_text', '')
+        full_text = content.get('body', '')
         hashtags = content.get('hashtags', [])
         hashtag_text = ' '.join(hashtags) if hashtags else ''
         image_section = f'<img src="{image_url}" style="width: 100%; border-radius: 8px; margin: 12px 0;" alt="Imagen del post">' if image_url else ''
@@ -397,7 +404,8 @@ class StoryCrew:
     
     def create_instagram_preview(self, content: Dict[str, Any], image_url: str = '') -> str:
         """Crea vista previa estilo Instagram"""
-        full_text = content.get('full_text', '')
+        # full_text = content.get('full_text', '')
+        full_text = content.get('body', '')
         hashtags = content.get('hashtags', [])
         hashtag_text = ' '.join(hashtags) if hashtags else ''
         
@@ -431,7 +439,8 @@ class StoryCrew:
     
     def create_twitter_preview(self, content: Dict[str, Any], image_url: str = '') -> str:
         """Crea vista previa estilo Twitter"""
-        main_tweet = content.get('main_tweet', content.get('full_text', ''))
+        # main_tweet = content.get('main_tweet', content.get('full_text', ''))
+        main_tweet = content.get('main_tweet', content.get('body', ''))
         thread = content.get('thread', [])
         hashtags = content.get('hashtags', [])
         
@@ -532,24 +541,24 @@ class StoryCrew:
             if save_clicked:
                 with st.spinner("Guardando historia..."):
                     
-                    storage_task = self.tasks.storage_task(story_data,local_formats,save_to_supabase)
+                    # storage_task = self.tasks.storage_task(story_data,local_formats,save_to_supabase)
         
-                    crew2 = Crew(
-                        agents=[self.agents.storage_agent()],
-                        tasks=[storage_task],
-                        process=Process.sequential,
-                        verbose=True
-                    )
+                    # crew2 = Crew(
+                    #     agents=[self.agents.storage_agent()],
+                    #     tasks=[storage_task],
+                    #     process=Process.sequential,
+                    #     verbose=True
+                    # )
         
-                    # Ejecutar crew con seguimiento
-                    self.update_workflow("Agente de Almacenamiento", "Guardando historia", "running")  #, workflow_placeholder
+                    # # Ejecutar crew con seguimiento
+                    # self.update_workflow("Agente de Almacenamiento", "Guardando historia", "running")  #, workflow_placeholder
         
-                    result = crew2.kickoff()      
+                    # result = crew2.kickoff()      
      
-                    success = result["success"]
-                    saved_files = result["saved_files"]
+                    # success = result["success"]
+                    # saved_files = result["saved_files"]
 
-                    # success, saved_files = self.save_story(story_data, local_formats, save_to_supabase, update_existing)
+                    success, saved_files = self.save_story(story_data, local_formats, save_to_supabase, update_existing)
                     
                     # Mostrar confirmación detallada
                     if success:
@@ -1103,7 +1112,7 @@ class StoryCrew:
         self.render_story_preview(preview_data)
         
         # Botones de acción
-        col1, col2 = st.columns(2)
+        col1, col2, col3 = st.columns(3)
         
         with col1:
             if st.button(f"📋 Usar como Plantilla", key=f"template_{story_data.get('id', hash(str(story_data)))}"):
@@ -1115,7 +1124,65 @@ class StoryCrew:
         with col2:
             if st.button(f"🗑️ Eliminar Historia", key=f"delete_{story_data.get('id', hash(str(story_data)))}", type="secondary"):
                 self.delete_story_interface(story_data)
+        
+        with col3:
+            if st.button(f" Publicar Historia", key=f"publicar_{story_data.get('id', hash(str(story_data)))}", type="secondary"):
+                self.publish_story(story_data)
+                # self.publish_agentic(story_data)
+                st.balloons()
+
+    def publish_agentic(self, story_data: Dict[str, Any]):
+        
+        
+        publish_task = self.tasks.publish_task(story_data)
+        publication_agent = self.agents.publication_agent()
+        
+        # Actualizar workflow
+        # self.update_workflow("Agente de Publicación", "Publicando...", "running", workflow_placeholder)
     
+        crew3 = Crew(
+            # self.agents.voice_agent, self.agents.user_interaction_agent(), 
+            agents=[publication_agent],
+            tasks=[publish_task],
+            process=Process.sequential,
+            verbose=True
+        )
+        
+        # self.update_workflow("Agente de Publicación", "Publicando historia", "running", workflow_placeholder)
+        
+        result = crew3.kickoff()
+        
+        # self.update_workflow("Agente de Publicación", "Publicación completado", "completed", workflow_placeholder)
+        
+        
+
+    def publish_story(self, story_data: Dict[str, Any]):
+        print("Hello from instagramApi!")
+        # start_time = datetime.now() + timedelta(minutes=1)
+        cl = login_user()        
+        print(cl)
+        response = requests.get(story_data.get('image_url'))
+        image = Image.open(BytesIO(response.content))
+        image = image.convert("RGB")
+        new_image= image.resize((1080,1080))
+        new_image.save("temporary.jpg")
+        image_path = Path("temporary.jpg")
+        caption = story_data.get('content')
+        print(image_path)
+        print(caption)
+        # os.path.splitext(image)[0] + "\n #midjourney #aiart #promptengineering #chaos #midjourneychaos"
+        # image_path = os.path.join(image_folder, image)
+        # caption = "hola instagram"
+        post_image(cl, image_path, json.dumps(caption))
+        # os.remove(image_path)
+        # logger.info(f"Posted and removed image: {image_path}")
+ 
+    # logger.info("All images have been posted. Script is ending.")
+        print("La historia fue publicada.")
+        return True
+
+
+
     def delete_story_interface(self, story_data: Dict[str, Any]):
         """Interfaz para confirmar eliminación de historia"""
         story_title = story_data.get('content', {}).get('title', 'Historia sin título')

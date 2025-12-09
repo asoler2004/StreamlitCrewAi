@@ -1,2 +1,352 @@
-2025-12-05 19:47:14,331 - INFO - Session Replay for default trace: https://app.agentops.ai/sessions?trace_id=e1612893496f3e26fa0914fabc70bc01
-2025-12-05 19:55:31,842 - INFO - Session Replay for default.session trace: https://app.agentops.ai/sessions?trace_id=e1612893496f3e26fa0914fabc70bc01
+2025-12-09 17:02:42,151 - INFO - Session Replay for default trace: https://app.agentops.ai/sessions?trace_id=a91ffa3a6c3c668e8210d9d62b87d751
+2025-12-09 17:04:11,592 - ERROR - Error in span gemini-2.5-flash.llm: litellm.APIConnectionError: Your default credentials were not found. To set up Application Default Credentials, see https://cloud.google.com/docs/authentication/external/set-up-adc for more information.
+Traceback (most recent call last):
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\main.py", line 2675, in completion
+    model_response = vertex_chat_completion.completion(  # type: ignore
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\gemini\vertex_and_google_ai_studio_gemini.py", line 1811, in completion
+    _auth_header, vertex_project = self._ensure_access_token(
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\vertex_llm_base.py", line 266, in _ensure_access_token
+    return self.get_access_token(
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\vertex_llm_base.py", line 437, in get_access_token
+    raise e
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\vertex_llm_base.py", line 430, in get_access_token
+    _credentials, credential_project_id = self.load_auth(
+                                          ^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\vertex_llm_base.py", line 114, in load_auth
+    creds, creds_project_id = self._credentials_from_default_auth(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\vertex_llm_base.py", line 160, in _credentials_from_default_auth
+    return google_auth.default(scopes=scopes)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\google\auth\_default.py", line 739, in default
+    raise exceptions.DefaultCredentialsError(_CLOUD_SDK_MISSING_CREDENTIALS)
+google.auth.exceptions.DefaultCredentialsError: Your default credentials were not found. To set up Application Default Credentials, see https://cloud.google.com/docs/authentication/external/set-up-adc for more information.
+
+2025-12-09 17:04:11,609 - ERROR - Error in span Agente de Publicaciones en Redes Sociales.agent: litellm.APIConnectionError: Your default credentials were not found. To set up Application Default Credentials, see https://cloud.google.com/docs/authentication/external/set-up-adc for more information.
+Traceback (most recent call last):
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\main.py", line 2675, in completion
+    model_response = vertex_chat_completion.completion(  # type: ignore
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\gemini\vertex_and_google_ai_studio_gemini.py", line 1811, in completion
+    _auth_header, vertex_project = self._ensure_access_token(
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\vertex_llm_base.py", line 266, in _ensure_access_token
+    return self.get_access_token(
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\vertex_llm_base.py", line 437, in get_access_token
+    raise e
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\vertex_llm_base.py", line 430, in get_access_token
+    _credentials, credential_project_id = self.load_auth(
+                                          ^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\vertex_llm_base.py", line 114, in load_auth
+    creds, creds_project_id = self._credentials_from_default_auth(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\vertex_llm_base.py", line 160, in _credentials_from_default_auth
+    return google_auth.default(scopes=scopes)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\google\auth\_default.py", line 739, in default
+    raise exceptions.DefaultCredentialsError(_CLOUD_SDK_MISSING_CREDENTIALS)
+google.auth.exceptions.DefaultCredentialsError: Your default credentials were not found. To set up Application Default Credentials, see https://cloud.google.com/docs/authentication/external/set-up-adc for more information.
+
+2025-12-09 17:04:11,642 - ERROR - Error in span 
+            Gestiona la publicación de la historia seleccionada almacenada en el Json {'content': {'body': '¡Únete a la celebración de mi cumpleaños! Habrá juegos, pastel, sorpresas y mucha, mucha alegría. ¡No te pierdas esta fiesta inolvidable donde la risa y la amistad serán los protagonistas! ¡Ven y comparte un día lleno de magia y felicidad con tu personaje favorito!', 'hook': '¡Prepárate para una explosión de alegría y diversión!', 'title': '¡Fiesta de Cumpleaños Mágica!', 'full_text': {'body': '¡Únete a la celebración de mi cumpleaños! Habrá juegos, pastel, sorpresas y mucha, mucha alegría. ¡No te pierdas esta fiesta inolvidable donde la risa y la amistad serán los protagonistas! ¡Ven y comparte un día lleno de magia y felicidad con tu personaje favorito!', 'hook': '¡Prepárate para una explosión de alegría y diversión!', 'benefits': ['Diversión asegurada para todas las edades', 'Crea recuerdos inolvidables con amigos y familiares', 'Celebra con tu personaje favorito y disfruta de sorpresas especiales'], 'hashtags': ['#FiestaDeCumpleaños', '#Celebracion', '#Diversion', '#Alegria', '#CumpleañosMagico'], 'headline': '¡Fiesta de Cumpleaños Mágica!', 'call_to_action': '¡Confirma tu asistencia antes del [Fecha]!'}, 'call_to_action': '¡Confirma tu asistencia antes del [Fecha]!'}, 'platform': 'instagram', 'tone': 'cálido y festivo', 'created_at': '2025-12-02T22:27:47.680778+00:00', 'id': 'f1405767-41be-4110-a223-79302778e530', 'images': ['https://myufeyvpvvhupgnuqunm.supabase.co/storage/v1/object/public/story-images/demo_user_20251202_192740.jpg'], 'image_url': 'https://myufeyvpvvhupgnuqunm.supabase.co/storage/v1/object/public/story-images/demo_user_20251202_192740.jpg'}:
+            
+            Ruta de la imagen a publicar: en el campo 'image_url' del Json
+            Texto a publicar: en el campo 'content' del json
+            Plataforma de publicación: en el campo 'platform' del json.
+            
+            Tu trabajo es:
+            1. Seleccionar la herramienta adecuada para interactuar con la red social especificada en 'platform' del json con la historia.
+            2. Utilizar la herramienta para publicar la imagen especificada en el campo 'image_url' y el texto en 'content' en la plataforma correspondiente a 'platform'.
+            3. Proporcionar confirmación de que la publicación fue exitosa.
+            
+            .task: litellm.APIConnectionError: Your default credentials were not found. To set up Application Default Credentials, see https://cloud.google.com/docs/authentication/external/set-up-adc for more information.
+Traceback (most recent call last):
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\main.py", line 2675, in completion
+    model_response = vertex_chat_completion.completion(  # type: ignore
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\gemini\vertex_and_google_ai_studio_gemini.py", line 1811, in completion
+    _auth_header, vertex_project = self._ensure_access_token(
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\vertex_llm_base.py", line 266, in _ensure_access_token
+    return self.get_access_token(
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\vertex_llm_base.py", line 437, in get_access_token
+    raise e
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\vertex_llm_base.py", line 430, in get_access_token
+    _credentials, credential_project_id = self.load_auth(
+                                          ^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\vertex_llm_base.py", line 114, in load_auth
+    creds, creds_project_id = self._credentials_from_default_auth(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\vertex_llm_base.py", line 160, in _credentials_from_default_auth
+    return google_auth.default(scopes=scopes)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\google\auth\_default.py", line 739, in default
+    raise exceptions.DefaultCredentialsError(_CLOUD_SDK_MISSING_CREDENTIALS)
+google.auth.exceptions.DefaultCredentialsError: Your default credentials were not found. To set up Application Default Credentials, see https://cloud.google.com/docs/authentication/external/set-up-adc for more information.
+
+2025-12-09 17:04:15,529 - ERROR - Error in span crewai.workflow: litellm.APIConnectionError: Your default credentials were not found. To set up Application Default Credentials, see https://cloud.google.com/docs/authentication/external/set-up-adc for more information.
+Traceback (most recent call last):
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\main.py", line 2675, in completion
+    model_response = vertex_chat_completion.completion(  # type: ignore
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\gemini\vertex_and_google_ai_studio_gemini.py", line 1811, in completion
+    _auth_header, vertex_project = self._ensure_access_token(
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\vertex_llm_base.py", line 266, in _ensure_access_token
+    return self.get_access_token(
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\vertex_llm_base.py", line 437, in get_access_token
+    raise e
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\vertex_llm_base.py", line 430, in get_access_token
+    _credentials, credential_project_id = self.load_auth(
+                                          ^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\vertex_llm_base.py", line 114, in load_auth
+    creds, creds_project_id = self._credentials_from_default_auth(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\vertex_llm_base.py", line 160, in _credentials_from_default_auth
+    return google_auth.default(scopes=scopes)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\google\auth\_default.py", line 739, in default
+    raise exceptions.DefaultCredentialsError(_CLOUD_SDK_MISSING_CREDENTIALS)
+google.auth.exceptions.DefaultCredentialsError: Your default credentials were not found. To set up Application Default Credentials, see https://cloud.google.com/docs/authentication/external/set-up-adc for more information.
+
+2025-12-09 17:23:06,630 - ERROR - Error in span gemini-2.5-flash.llm: litellm.APIConnectionError: Your default credentials were not found. To set up Application Default Credentials, see https://cloud.google.com/docs/authentication/external/set-up-adc for more information.
+Traceback (most recent call last):
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\main.py", line 2675, in completion
+    model_response = vertex_chat_completion.completion(  # type: ignore
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\gemini\vertex_and_google_ai_studio_gemini.py", line 1811, in completion
+    _auth_header, vertex_project = self._ensure_access_token(
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\vertex_llm_base.py", line 266, in _ensure_access_token
+    return self.get_access_token(
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\vertex_llm_base.py", line 437, in get_access_token
+    raise e
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\vertex_llm_base.py", line 430, in get_access_token
+    _credentials, credential_project_id = self.load_auth(
+                                          ^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\vertex_llm_base.py", line 114, in load_auth
+    creds, creds_project_id = self._credentials_from_default_auth(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\vertex_llm_base.py", line 160, in _credentials_from_default_auth
+    return google_auth.default(scopes=scopes)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\google\auth\_default.py", line 739, in default
+    raise exceptions.DefaultCredentialsError(_CLOUD_SDK_MISSING_CREDENTIALS)
+google.auth.exceptions.DefaultCredentialsError: Your default credentials were not found. To set up Application Default Credentials, see https://cloud.google.com/docs/authentication/external/set-up-adc for more information.
+
+2025-12-09 17:23:06,647 - ERROR - Error in span Agente de Análisis Visual.agent: litellm.APIConnectionError: Your default credentials were not found. To set up Application Default Credentials, see https://cloud.google.com/docs/authentication/external/set-up-adc for more information.
+Traceback (most recent call last):
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\main.py", line 2675, in completion
+    model_response = vertex_chat_completion.completion(  # type: ignore
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\gemini\vertex_and_google_ai_studio_gemini.py", line 1811, in completion
+    _auth_header, vertex_project = self._ensure_access_token(
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\vertex_llm_base.py", line 266, in _ensure_access_token
+    return self.get_access_token(
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\vertex_llm_base.py", line 437, in get_access_token
+    raise e
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\vertex_llm_base.py", line 430, in get_access_token
+    _credentials, credential_project_id = self.load_auth(
+                                          ^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\vertex_llm_base.py", line 114, in load_auth
+    creds, creds_project_id = self._credentials_from_default_auth(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\vertex_llm_base.py", line 160, in _credentials_from_default_auth
+    return google_auth.default(scopes=scopes)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\google\auth\_default.py", line 739, in default
+    raise exceptions.DefaultCredentialsError(_CLOUD_SDK_MISSING_CREDENTIALS)
+google.auth.exceptions.DefaultCredentialsError: Your default credentials were not found. To set up Application Default Credentials, see https://cloud.google.com/docs/authentication/external/set-up-adc for more information.
+
+2025-12-09 17:23:06,663 - ERROR - Error in span 
+            Analiza la imagen ubicada en: temp_Naruto.png
+            
+            Tu trabajo es:
+            1. Usar la herramienta de análisis de imagen para obtener una descripción básica
+            2. Expandir esa descripción con detalles adicionales sobre:
+               - Elementos visuales principales
+               - Colores dominantes
+               - Emociones que transmite
+               - Contexto o situación mostrada
+               - Posibles interpretaciones o mensajes
+            
+            Proporciona una descripción rica y detallada que sirva como base para crear contenido compelling.
+            .task: litellm.APIConnectionError: Your default credentials were not found. To set up Application Default Credentials, see https://cloud.google.com/docs/authentication/external/set-up-adc for more information.
+Traceback (most recent call last):
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\main.py", line 2675, in completion
+    model_response = vertex_chat_completion.completion(  # type: ignore
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\gemini\vertex_and_google_ai_studio_gemini.py", line 1811, in completion
+    _auth_header, vertex_project = self._ensure_access_token(
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\vertex_llm_base.py", line 266, in _ensure_access_token
+    return self.get_access_token(
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\vertex_llm_base.py", line 437, in get_access_token
+    raise e
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\vertex_llm_base.py", line 430, in get_access_token
+    _credentials, credential_project_id = self.load_auth(
+                                          ^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\vertex_llm_base.py", line 114, in load_auth
+    creds, creds_project_id = self._credentials_from_default_auth(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\vertex_llm_base.py", line 160, in _credentials_from_default_auth
+    return google_auth.default(scopes=scopes)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\google\auth\_default.py", line 739, in default
+    raise exceptions.DefaultCredentialsError(_CLOUD_SDK_MISSING_CREDENTIALS)
+google.auth.exceptions.DefaultCredentialsError: Your default credentials were not found. To set up Application Default Credentials, see https://cloud.google.com/docs/authentication/external/set-up-adc for more information.
+
+2025-12-09 17:23:09,704 - ERROR - Error in span crewai.workflow: litellm.APIConnectionError: Your default credentials were not found. To set up Application Default Credentials, see https://cloud.google.com/docs/authentication/external/set-up-adc for more information.
+Traceback (most recent call last):
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\main.py", line 2675, in completion
+    model_response = vertex_chat_completion.completion(  # type: ignore
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\gemini\vertex_and_google_ai_studio_gemini.py", line 1811, in completion
+    _auth_header, vertex_project = self._ensure_access_token(
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\vertex_llm_base.py", line 266, in _ensure_access_token
+    return self.get_access_token(
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\vertex_llm_base.py", line 437, in get_access_token
+    raise e
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\vertex_llm_base.py", line 430, in get_access_token
+    _credentials, credential_project_id = self.load_auth(
+                                          ^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\vertex_llm_base.py", line 114, in load_auth
+    creds, creds_project_id = self._credentials_from_default_auth(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\vertex_llm_base.py", line 160, in _credentials_from_default_auth
+    return google_auth.default(scopes=scopes)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\google\auth\_default.py", line 739, in default
+    raise exceptions.DefaultCredentialsError(_CLOUD_SDK_MISSING_CREDENTIALS)
+google.auth.exceptions.DefaultCredentialsError: Your default credentials were not found. To set up Application Default Credentials, see https://cloud.google.com/docs/authentication/external/set-up-adc for more information.
+
+2025-12-09 17:25:01,375 - ERROR - Error in span gemini-2.5-flash.llm: litellm.APIConnectionError: Your default credentials were not found. To set up Application Default Credentials, see https://cloud.google.com/docs/authentication/external/set-up-adc for more information.
+Traceback (most recent call last):
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\main.py", line 2675, in completion
+    model_response = vertex_chat_completion.completion(  # type: ignore
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\gemini\vertex_and_google_ai_studio_gemini.py", line 1811, in completion
+    _auth_header, vertex_project = self._ensure_access_token(
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\vertex_llm_base.py", line 266, in _ensure_access_token
+    return self.get_access_token(
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\vertex_llm_base.py", line 437, in get_access_token
+    raise e
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\vertex_llm_base.py", line 430, in get_access_token
+    _credentials, credential_project_id = self.load_auth(
+                                          ^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\vertex_llm_base.py", line 114, in load_auth
+    creds, creds_project_id = self._credentials_from_default_auth(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\vertex_llm_base.py", line 160, in _credentials_from_default_auth
+    return google_auth.default(scopes=scopes)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\google\auth\_default.py", line 739, in default
+    raise exceptions.DefaultCredentialsError(_CLOUD_SDK_MISSING_CREDENTIALS)
+google.auth.exceptions.DefaultCredentialsError: Your default credentials were not found. To set up Application Default Credentials, see https://cloud.google.com/docs/authentication/external/set-up-adc for more information.
+
+2025-12-09 17:25:01,393 - ERROR - Error in span Agente de Análisis Visual.agent: litellm.APIConnectionError: Your default credentials were not found. To set up Application Default Credentials, see https://cloud.google.com/docs/authentication/external/set-up-adc for more information.
+Traceback (most recent call last):
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\main.py", line 2675, in completion
+    model_response = vertex_chat_completion.completion(  # type: ignore
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\gemini\vertex_and_google_ai_studio_gemini.py", line 1811, in completion
+    _auth_header, vertex_project = self._ensure_access_token(
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\vertex_llm_base.py", line 266, in _ensure_access_token
+    return self.get_access_token(
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\vertex_llm_base.py", line 437, in get_access_token
+    raise e
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\vertex_llm_base.py", line 430, in get_access_token
+    _credentials, credential_project_id = self.load_auth(
+                                          ^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\vertex_llm_base.py", line 114, in load_auth
+    creds, creds_project_id = self._credentials_from_default_auth(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\vertex_llm_base.py", line 160, in _credentials_from_default_auth
+    return google_auth.default(scopes=scopes)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\google\auth\_default.py", line 739, in default
+    raise exceptions.DefaultCredentialsError(_CLOUD_SDK_MISSING_CREDENTIALS)
+google.auth.exceptions.DefaultCredentialsError: Your default credentials were not found. To set up Application Default Credentials, see https://cloud.google.com/docs/authentication/external/set-up-adc for more information.
+
+2025-12-09 17:25:01,409 - ERROR - Error in span 
+            Analiza la imagen ubicada en: temp_Naruto.png
+            
+            Tu trabajo es:
+            1. Usar la herramienta de análisis de imagen para obtener una descripción básica
+            2. Expandir esa descripción con detalles adicionales sobre:
+               - Elementos visuales principales
+               - Colores dominantes
+               - Emociones que transmite
+               - Contexto o situación mostrada
+               - Posibles interpretaciones o mensajes
+            
+            Proporciona una descripción rica y detallada que sirva como base para crear contenido compelling.
+            .task: litellm.APIConnectionError: Your default credentials were not found. To set up Application Default Credentials, see https://cloud.google.com/docs/authentication/external/set-up-adc for more information.
+Traceback (most recent call last):
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\main.py", line 2675, in completion
+    model_response = vertex_chat_completion.completion(  # type: ignore
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\gemini\vertex_and_google_ai_studio_gemini.py", line 1811, in completion
+    _auth_header, vertex_project = self._ensure_access_token(
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\vertex_llm_base.py", line 266, in _ensure_access_token
+    return self.get_access_token(
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\vertex_llm_base.py", line 437, in get_access_token
+    raise e
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\vertex_llm_base.py", line 430, in get_access_token
+    _credentials, credential_project_id = self.load_auth(
+                                          ^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\vertex_llm_base.py", line 114, in load_auth
+    creds, creds_project_id = self._credentials_from_default_auth(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\vertex_llm_base.py", line 160, in _credentials_from_default_auth
+    return google_auth.default(scopes=scopes)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\google\auth\_default.py", line 739, in default
+    raise exceptions.DefaultCredentialsError(_CLOUD_SDK_MISSING_CREDENTIALS)
+google.auth.exceptions.DefaultCredentialsError: Your default credentials were not found. To set up Application Default Credentials, see https://cloud.google.com/docs/authentication/external/set-up-adc for more information.
+
+2025-12-09 17:25:05,570 - ERROR - Error in span crewai.workflow: litellm.APIConnectionError: Your default credentials were not found. To set up Application Default Credentials, see https://cloud.google.com/docs/authentication/external/set-up-adc for more information.
+Traceback (most recent call last):
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\main.py", line 2675, in completion
+    model_response = vertex_chat_completion.completion(  # type: ignore
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\gemini\vertex_and_google_ai_studio_gemini.py", line 1811, in completion
+    _auth_header, vertex_project = self._ensure_access_token(
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\vertex_llm_base.py", line 266, in _ensure_access_token
+    return self.get_access_token(
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\vertex_llm_base.py", line 437, in get_access_token
+    raise e
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\vertex_llm_base.py", line 430, in get_access_token
+    _credentials, credential_project_id = self.load_auth(
+                                          ^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\vertex_llm_base.py", line 114, in load_auth
+    creds, creds_project_id = self._credentials_from_default_auth(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\litellm\llms\vertex_ai\vertex_llm_base.py", line 160, in _credentials_from_default_auth
+    return google_auth.default(scopes=scopes)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\Documents\programacion\Kiro\StreamlitCrewAI\.venv\Lib\site-packages\google\auth\_default.py", line 739, in default
+    raise exceptions.DefaultCredentialsError(_CLOUD_SDK_MISSING_CREDENTIALS)
+google.auth.exceptions.DefaultCredentialsError: Your default credentials were not found. To set up Application Default Credentials, see https://cloud.google.com/docs/authentication/external/set-up-adc for more information.
+
+2025-12-09 17:26:53,349 - INFO - Session Replay for default.session trace: https://app.agentops.ai/sessions?trace_id=a91ffa3a6c3c668e8210d9d62b87d751

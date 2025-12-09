@@ -7,15 +7,15 @@ import agentops
 
 # Cargar variables de entorno
 load_dotenv()
-print("en main.py = " + os.getenv('GEMINI_API_KEY'))
+os.getenv('GEMINI_API_KEY')
 
 
 agentops_key = os.getenv('AGENTOPS_API_KEY')
 
-agentops.init(
-    api_key= agentops_key,
-    tags=['crewai']
-)
+# agentops.init(
+#     api_key= agentops_key,
+#     tags=['crewai']
+# )
 
 
 def main():
